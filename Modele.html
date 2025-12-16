@@ -1,0 +1,1707 @@
+
+<!doctype html>
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="DigiCreaTeam">
+
+        <title>DigiCreaTeam</title>
+       
+        <!-- CSS FILES -->
+        <link rel="shortcut icon" href="favicon.png">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap-icons.css" rel="stylesheet">
+        <link href="css/magnific-popup.css" rel="stylesheet">
+        <link href="css/digicreateam.css" rel="stylesheet">
+        
+        <!-- Styles pour le Chatbot IA Amélioré -->
+        <style>
+            #chatbot-container {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
+                font-family: 'DM Sans', sans-serif;
+            }
+
+            .chatbot-toggle {
+                width: 65px;
+                height: 65px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                color: white;
+                font-size: 28px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .chatbot-toggle::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s;
+            }
+
+            .chatbot-toggle:hover::before {
+                left: 100%;
+            }
+
+            .chatbot-toggle:hover {
+                transform: scale(1.15) rotate(5deg);
+                box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+            }
+
+            .chatbot-toggle:active {
+                transform: scale(1.05);
+            }
+
+            .chatbot-window {
+                position: absolute;
+                bottom: 90px;
+                right: 0;
+                width: 380px;
+                height: 550px;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+                display: none;
+                flex-direction: column;
+                overflow: hidden;
+                border: 1px solid rgba(102, 126, 234, 0.1);
+                backdrop-filter: blur(10px);
+            }
+
+            .chatbot-window.active {
+                display: flex;
+                animation: slideUpBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+
+            @keyframes slideUpBounce {
+                0% {
+                    opacity: 0;
+                    transform: translateY(30px) scale(0.9);
+                }
+                50% {
+                    transform: translateY(-5px) scale(1.02);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            .chatbot-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px 25px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .chatbot-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                opacity: 0.3;
+            }
+
+            .chatbot-header h5 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 700;
+                position: relative;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .chatbot-header h5::before {
+                content: '🤖';
+                font-size: 20px;
+            }
+
+            .chatbot-close {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 50%;
+                transition: all 0.3s ease;
+                position: relative;
+                z-index: 1;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .chatbot-close:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg);
+            }
+
+            .chatbot-messages {
+                flex: 1;
+                padding: 25px;
+                overflow-y: auto;
+                background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+                scroll-behavior: smooth;
+            }
+
+            .chatbot-messages::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .chatbot-messages::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+
+            .chatbot-messages::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 3px;
+            }
+
+            .message {
+                margin-bottom: 20px;
+                display: flex;
+                animation: messageSlide 0.4s ease-out;
+            }
+
+            @keyframes messageSlide {
+                from {
+                    opacity: 0;
+                    transform: translateX(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            .user-message {
+                justify-content: flex-end;
+            }
+
+            .bot-message {
+                justify-content: flex-start;
+            }
+
+            .message-content {
+                max-width: 85%;
+                padding: 15px 20px;
+                border-radius: 20px;
+                font-size: 14px;
+                line-height: 1.5;
+                position: relative;
+                word-wrap: break-word;
+            }
+
+            .user-message .message-content {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-bottom-right-radius: 8px;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+
+            .bot-message .message-content {
+                background: white;
+                color: #333;
+                border: 1px solid #e8ecf0;
+                border-bottom-left-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            }
+
+            .bot-message .message-content::before {
+                content: '';
+                position: absolute;
+                left: -8px;
+                bottom: 8px;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 8px 8px 8px 0;
+                border-color: transparent white transparent transparent;
+            }
+
+            .user-message .message-content::after {
+                content: '';
+                position: absolute;
+                right: -8px;
+                bottom: 8px;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 8px 0 8px 8px;
+                border-color: transparent transparent transparent #667eea;
+            }
+
+            .message-time {
+                font-size: 11px;
+                color: #999;
+                margin-top: 5px;
+                text-align: right;
+            }
+
+            .bot-message .message-time {
+                text-align: left;
+            }
+
+            .typing-indicator {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 15px 20px;
+                background: white;
+                border-radius: 20px;
+                border: 1px solid #e8ecf0;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                margin-bottom: 20px;
+                max-width: 85%;
+            }
+
+            .typing-dot {
+                width: 8px;
+                height: 8px;
+                background: #667eea;
+                border-radius: 50%;
+                animation: typing 1.4s infinite ease-in-out;
+            }
+
+            .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+            .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+            @keyframes typing {
+                0%, 80%, 100% {
+                    transform: scale(0);
+                    opacity: 0.5;
+                }
+                40% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+
+            .chatbot-input {
+                padding: 20px 25px;
+                background: white;
+                border-top: 1px solid #e8ecf0;
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                position: relative;
+            }
+
+            .chatbot-input::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, #667eea, transparent);
+            }
+
+            #chatbot-input-field {
+                flex: 1;
+                border: 2px solid #e8ecf0;
+                border-radius: 25px;
+                padding: 12px 20px;
+                font-size: 14px;
+                outline: none;
+                transition: all 0.3s ease;
+                background: #f8f9fa;
+            }
+
+            #chatbot-input-field:focus {
+                border-color: #667eea;
+                background: white;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+            .chatbot-send {
+                width: 45px;
+                height: 45px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border: none;
+                border-radius: 50%;
+                color: white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                font-size: 16px;
+            }
+
+            .chatbot-send:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+
+            .chatbot-send:active {
+                transform: scale(0.95);
+            }
+
+            .chatbot-send:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            /* Styles pour les réponses structurées */
+            .response-card {
+                background: white;
+                border-radius: 12px;
+                padding: 15px;
+                margin: 10px 0;
+                border-left: 4px solid #667eea;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .response-title {
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 8px;
+                font-size: 15px;
+            }
+
+            .response-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .response-list li {
+                padding: 6px 0;
+                border-bottom: 1px solid #f0f0f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .response-list li:last-child {
+                border-bottom: none;
+            }
+
+            .service-name {
+                font-weight: 500;
+                color: #333;
+            }
+
+            .service-price {
+                font-weight: 600;
+                color: #667eea;
+                background: rgba(102, 126, 234, 0.1);
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+            }
+            .contact-icon {
+                font-size: 16px;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .chatbot-window {
+                    width: 320px;
+                    height: 480px;
+                }
+                
+                #chatbot-container {
+                    bottom: 15px;
+                    right: 15px;
+                }
+
+                .chatbot-toggle {
+                    width: 60px;
+                    height: 60px;
+                    font-size: 24px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .chatbot-window {
+                    width: calc(100vw - 30px);
+                    height: calc(100vh - 100px);
+                    bottom: 80px;
+                    right: 15px;
+                }
+            }
+        </style>
+
+    </head>
+    <!-- Progress bar Fluide JS -->
+    <script>
+        setTimeout(() => {
+            const loader = document.getElementById("loader");
+    
+            loader.style.opacity = "0"; // fade-out
+    
+            setTimeout(() => {
+                loader.style.display = "none";
+                document.getElementById("page").style.display = "block";
+            }, 600);
+    
+        }, 3500); // durée de l’animation
+    </script>
+    <!-- Fin animation -->
+    <body>
+        <!-- Loader avec progress bar -->
+        <div id="loader">
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="loading-text">Chargement…</p>
+        </div>
+
+        <!-- Contenu principal -->
+        <div id="page" style="display:none;">
+            <!-- TON CODE DE PAGE ICI -->
+        </div>
+
+        <section class="preloader">
+            <div class="spinner">
+                <span class="spinner-rotate"></span>    
+            </div>
+        </section>
+
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <a href="index.html" class="navbar-brand mx-auto mx-lg-0">Outils </a>
+                
+
+                <div class="d-flex align-items-center d-lg-none">
+                    <a rel="stylesheet" href="#section_5" class="navbar-icon bi-telephone-plus me-3">
+                    
+                    </a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-lg-5">
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="index.html">ACCUEIL</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="#section_2">A PROPOS</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="#section_3">Services</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="#section_4">Projets</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="#section_5">Contact</a>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link click-scroll" href="Ourteams.html">Equipe</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link click-scroll" href="offre.html">Offre</a>
+                        </li>
+                    
+                    </ul>
+
+                </div>
+
+            </div>
+        </nav>
+
+        <main> 
+
+            <section class="hero d-flex  align-items-center" >
+                <div class="contenueEntete d-flex">
+                <div class="text">
+                    <h1>Salut !</h1>
+                    <p>Bienvenue chez DigiCreaTeam, votre partenaire ... <br/>Êtes-vous prêt(e)s à nous découvrir maintenant ?<br>Laissez-nous tout !<br>Allez-y</p>
+                   <a href="#section_2" ><button>Découvrir</button></a>
+                </div>
+                <a href="#" class="media-wrapper">
+                    <div class="media">
+                        <a href="https://www.youtube.com/channel/UCz9nfQaXTP419slK3kB71cA" class="img1"><img src="images/icon/youtube.png" width="29"></a>
+                        <a href="https://web.facebook.com/profile.php?id=61581078760176" class=""><img src="images/icon/facebook.png" width="29"></a>
+                        <a href="https://fr.pinterest.com/DigiCreateam" class=""><img src="images/icon/pinterest.png" width="29"></a>
+                        <a href="https://www.instagram.com/digicreateam/" class=""><img src="images/icon/instagram.png" width="29"></a>
+                    </div>
+                </a>
+                </div>
+                
+                
+            </section>
+
+
+            <section class="about section-padding" id="section_2">
+                <div class="container">
+                    <div class="row">
+
+                        <div class="debut col-lg-6 col-12">
+                            <img src="images/FontPerso2.jpg" class="about-image img-fluid" alt="">
+                        </div>
+
+                        <div class="col-lg-6 col-12 mt-5 mt-lg-0">
+                            <div class="amelior about-thumb">
+                                    <!--  Image -->
+                                <h3 class="pt-2 mb-3">DigiCreaTeam</h3>
+
+                                <p>Je suis heureux de vous présenter Digicreateam, une start-Up d'innovation dédiée à accompagner les entreprises, les startups et les particuliers dans leur transformation digitale et créative.</p>
+
+                                <p>Notre mission est simple : transformer les idées en solutions concrètes grâce l'innovation, la technologie et la créativité.</p>
+                                <p><span>Initiateur du projet :</span> Notre Start-Up d'innovation est Fondé par <strong>Monsieur Jordan SOFILA</strong>, Expert en Informatique</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="featured section-padding">
+                <div class="container">
+                    <div class="row">
+
+                        <div class="Resp_1 col-lg-6 col-12">
+                            <div class="profile-thumb">
+                                <div class="profile-title">
+                                    <h4 class="mb-0">Information</h4>
+                                </div>
+
+                                <div class="profile-body">
+                                    <p>
+                                        <span class="profile-small-title">Start-Up</span> 
+                                        <span>DigiCreaTeam</span>
+                                    </p>
+
+                                    <p>
+                                        <span class="profile-small-title">Créer</span> 
+                                        <span>Aout, 16 </span>
+                                    </p>
+
+                                    <p>
+                                        <span class="profile-small-title">Phone</span> 
+                                         <span><a href="tel:+243982345963">+243 982 345 963</a></span>
+                                    </p>
+
+                                    <p>
+                                        <span class="profile-small-title">Email</span> 
+                                        <span><a href="mailto:digicreateam@gmail.com">digicreateam@gmail.com</a></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="Resp col-lg-6 col-12 mt-5 mt-lg-0">
+                            <div class="about-thumb">
+                                <div class="row">
+                                    <div class="col-lg-6 col-6 featured-border-bottom py-2">
+                                        <strong class="featured-numbers">-1</strong>
+
+                                        <p class="featured-text">Année d'Experience</p>
+                                    </div>
+
+                                    <div class="col-lg-6 col-6 featured-border-start featured-border-bottom ps-5 py-2">
+                                        <strong class="featured-numbers">10+</strong>
+
+                                        <p class="featured-text">Partenaires</p>
+                                    </div>
+
+                                    <div class="col-lg-6 col-6 pt-4">
+                                        <strong class="featured-numbers">3</strong>
+
+                                        <p class="featured-text">Secteurs</p>
+                                    </div>
+
+                                    <div class="col-lg-6 col-6 featured-border-start ps-5 pt-4">
+                                        <strong class="featured-numbers">26</strong>
+
+                                        <p class="featured-text">Provinces</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+
+            <section class="clients section-padding">
+                <div class="container">
+                    <div class="aa row align-items-center">
+
+                        <div class="col-lg-12 col-12">
+                            <h3 class="text-center mb-5">Nos Partenaires </h3>
+                        </div>
+
+                        <div class="col-lg-2 col-4 ms-auto clients-item-height">
+                            <img src="images/clients/EnigmaUp.png" class="clients-image img-fluid" alt="">
+                        </div>
+
+                        <div class="col-lg-2 col-4 clients-item-height">
+                            <img src="images/clients/guitar-center.jpg" class="clients-image img-fluid" alt="">
+                        </div>
+
+                        <div class="col-lg-2 col-4 clients-item-height">
+                            <img src="images/clients/Nesten.png" class="clients-image img-fluid" alt="">
+                        </div>
+
+                        <div class="col-lg-2 col-4 clients-item-height">
+                            <img src="images/clients/DigiOnline.jpg" class="clients-image img-fluid" alt="">
+                        </div>
+
+                        <div class="col-lg-2 col-4 me-auto clients-item-height">
+                            <img src="images/clients/Mendo.jpg" class="clients-image img-fluid" alt="">
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="product-section">
+			<div class="container">
+				<div class="row">
+
+					<!-- Start Column 1 -->
+					<div class="boutique col-md-12 col-lg-3 mb-5 mb-lg-0">
+						<h2 class="mb-4 section-title">Boutique en ligne.</h2>
+						<p class="mb-4">Les Articles de nos Partenaires sont de bonne qualité.</br> Leurs boutiques sont certifiées, sécurisé auprès de notre Start-Up grâce à DigiOnline.</p>
+						<p><a href="Boutique.html" class="btn text-white">Explorer</a></p>
+					</div> 
+					<!-- End Column 1 -->
+
+					<!-- Start Column 2 -->
+					<div class="article col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+						<a class="product-item" href="Boutique.html">
+							<img src="images/product-1.png" class="img-fluid product-thumbnail">
+							<h3 class="product-title">Montre Connecté</h3>
+							<strong class="product-price">$15.00</strong>
+
+							<span class="icon-cross">
+								<img src="images/clients/cross.svg" class="img-fluid">
+							</span>
+						</a>
+					</div> 
+					<!-- End Column 2 -->
+
+					<!-- Start Column 3 -->
+					<div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+						<a class="product-item" href="Boutique.html">
+							<img src="images/product-2.png" class="img-fluid product-thumbnail">
+							<h3 class="product-title">T-Shirt Body H-F</h3>
+							<strong class="product-price">$15.00</strong>
+
+							<span class="icon-cross">
+								<img src="images/clients/cross.svg" class="img-fluid">
+							</span>
+						</a>
+					</div>
+					<!-- End Column 3 -->
+
+					<!-- Start Column 4 -->
+					<div class="col-12 col-md-4 col-lg-3 mb-5 mb-md-0">
+						<a class="product-item" href="Boutique.html">
+							<img src="images/product-3.png" class="img-fluid product-thumbnail">
+							<h3 class="product-title">Sac féminin </h3>
+							<strong class="product-price">$23.00</strong>
+
+							<span class="icon-cross">
+								<img src="images/clients/cross.svg" class="img-fluid">
+							</span>
+						</a>
+					</div>
+					<!-- End Column 4 -->
+
+				</div>
+			</div>
+		</div>
+            </section>
+            <section class="services section-padding" id="section_3">
+                <div class="container">
+                    <div class="row">
+
+                        <div class="col-lg-10 col-12 mx-auto">
+                            <div class="section-title-wrap d-flex justify-content-center align-items-center mb-5">
+
+                                <h2 class="ms-4 mb-0">Services</h2>
+                            </div>
+
+                            <div class="row pt-lg-5">
+                                <div class="col-lg-6 col-12">
+                                    <div class="services-thumb">
+                                        <div class="d-flex flex-wrap align-items-center border-bottom mb-4 pb-3">
+                                            <h3 class="mb-0">Websites</h3>
+
+                                            <div class="services-price-wrap ms-auto">
+                                                <p class="services-price-text mb-0">$300</p>
+                                                <div class="services-price-overlay"></div>
+                                            </div>
+                                        </div>
+
+                                        <p>Faite découvrir votre entreprise, Identité, boutique en commandant un site bien conçu et sécurisé  depuis Maintenant .</p>
+
+                                        <a href="#section_5" class="custom-btn custom-border-btn btn mt-3">Commencer</a>
+
+                                        <div class="services-icon-wrap d-flex justify-content-center align-items-center">
+                                            <i class="services-icon bi-globe"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-12">
+                                    <div class="services-thumb services-thumb-up">
+                                        <div class="d-flex flex-wrap align-items-center border-bottom pb-3">
+                                            <h3 class="mb-0">Digischool</h3>
+
+                                            <div class="services-price-wrap ms-auto">
+                                                <p class="services-price-text mb-0">$99</p>
+                                                <div class="services-price-overlay"></div>
+                                            </div>
+                                        </div>
+
+                                        <p>Numériser votre Etablissement pour une meilleure gestion des (élèves, travailleurs, Professeur, etc…) avec notre programme, mis à votre disposition.</p>
+
+                                        <a href="#section_5" class="custom-btn custom-border-btn btn mt-3">Contacter</a>
+
+                                        <div class="services-icon-wrap d-flex justify-content-center align-items-center">
+                                            <i class="services-icon bi-lightbulb"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-12">
+                                    <div class="services-thumb">
+                                        <div class="d-flex flex-wrap align-items-center border-bottom mb-4 pb-3">
+                                            <h3 class="mb-0">Ecommerce</h3>
+
+                                            <div class="services-price-wrap ms-auto">
+                                                <p class="services-price-text mb-0">$1,200</p>
+                                                <div class="services-price-overlay"></div>
+                                            </div>
+                                        </div>
+
+                                        <p>Voulez-vous ventre depuis Internet ? Faites-vous concevoir un site E-Commerce pour la vente de vos Article.</p>
+
+                                        <a href="#section_5" class="custom-btn custom-border-btn btn mt-3">Explorer</a>
+
+                                        <div class="services-icon-wrap d-flex justify-content-center align-items-center">
+                                            <i class="services-icon bi-phone"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-12">
+                                    <div class="services-thumb services-thumb-up">
+                                        <div class="d-flex flex-wrap align-items-center border-bottom mb-4 pb-3">
+                                            <h3 class="mb-0">SEO</h3>
+
+                                            <div class="services-price-wrap ms-auto">
+                                                <p class="services-price-text mb-0">$200</p>
+                                                <div class="services-price-overlay"></div>
+                                            </div>
+                                        </div>
+
+                                        <p>Améliore le classement de ton identité en ligne dans les résultats de recherche. pour augmenter la notoriété et la crédibilité de ton Entreprise</p>
+
+                                        <a href="#section_5" class="custom-btn custom-border-btn btn mt-3">Débuter</a>
+
+                                        <div class="services-icon-wrap d-flex justify-content-center align-items-center">
+                                            <i class="services-icon bi-google"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="projects section-padding" id="section_4">
+                <div class="container">
+                    <div class="row">
+
+                        <div class="col-lg-8 col-md-8 col-12 ms-auto">
+                            <div class="section-title-wrap d-flex justify-content-center align-items-center mb-4">
+                                <img src="images/white-desk-work-study-aesthetics.jpg" class="avatar-image img-fluid" alt="">
+
+                                <h2 class="ms-4 mb-0">Projets</h2>
+                            </div>
+                        </div>
+
+                        <div class="clearfix"></div>
+
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <div class="projects-thumb">
+                                <div class="projects-info">
+                                    <small class="projects-tag">Digischool</small>
+
+                                    <h3 class="projects-title">Ecole</h3>
+                                </div>
+
+                                <a href="images/projects/nikhil-KO4io-eCAXA-unsplash.jpg" class="popup-image">
+                                    <img src="images/projects/nikhil-KO4io-eCAXA-unsplash.jpg" class="projects-image img-fluid" alt="">
+                                </a>
+                                <a href="">Savoir plus</a>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <div class="projects-thumb">
+                                <div class="projects-info">
+                                    <small class="projects-tag">Entreprise</small>
+
+                                    <h3 class="projects-title">Dose</h3>
+                                </div>
+
+                                <a href="images/projects/the-5th-IQYR7N67dhM-unsplash.jpg" class="popup-image">
+                                    <img src="images/projects/the-5th-IQYR7N67dhM-unsplash.jpg" class="projects-image img-fluid" alt="">
+                                </a>
+                                <a href="#">Savoir plus</a>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <div class="projects-thumb">
+                                <div class="projects-info">
+                                    <small class="projects-tag">Website</small>
+
+                                    <h3 class="projects-title">Entreprise</h3>
+                                </div>
+
+                                <a href="images/projects/true-agency-9Bjog5FZ-oc-unsplash.jpg" class="popup-image">
+                                    <img src="images/projects/true-agency-9Bjog5FZ-oc-unsplash.jpg" class="projects-image img-fluid" alt="">
+                                </a>
+                                <a href="#">Savoir plus</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="contact section-padding" id="section_5">
+                    <div class="container">
+                        <div class="row">
+
+                            <div class="col-lg-6 col-md-8 col-12">
+                                <div class="section-title-wrap d-flex justify-content-center align-items-center mb-5">
+                                    <img src="images/aerial-view-man-using-computer-laptop-wooden-table.jpg" class="avatar-image img-fluid" alt="">
+
+                                    <h2 class="ms-4 mb-0">Contact</h2>
+                                </div>
+                            </div>
+
+                            <div class="clearfix"></div>
+
+                            <div class="col-lg-3 col-md-6 col-12 pe-lg-0">
+                                <div class="contact-info contact-info-border-start d-flex flex-column">
+                                    <strong class="site-footer-title d-block mb-3">Services</strong>
+
+                                    <ul class="footer-menu">
+                                        <li class="footer-menu-item"><a href="#section_3" class="footer-menu-link">Websites</a></li>
+
+                                        <li class="footer-menu-item"><a href="#section_3" class="footer-menu-link">Etab</a></li>
+
+                                        <li class="footer-menu-item"><a href="#section_3" class="footer-menu-link">Ecommerce</a></li>
+
+                                        <li class="footer-menu-item"><a href="#section_3" class="footer-menu-link">SEO</a></li>
+                                    </ul>
+
+                                    <strong class="site-footer-title d-block mt-4 mb-3">Rester connecté </strong>
+
+                                    <ul class="social-icon">
+                                        <li class="social-icon-item"><a href="https://x.com/DigicreaTe61298" class="social-icon-link bi-twitter"></a></li>
+
+                                        <li class="social-icon-item"><a href="https://www.instagram.com/digicreateam/" class="social-icon-link bi-instagram"></a></li>
+
+                                        <li class="social-icon-item"><a href="https://fr.pinterest.com/DigiCreateam" class="social-icon-link bi-pinterest"></a></li>
+
+                                        <li class="social-icon-item"><a href="https://www.youtube.com/channel/UCz9nfQaXTP419slK3kB71cA" class="social-icon-link bi-youtube"></a></li>
+                                    </ul>
+
+                                    <strong class="site-footer-title d-block mt-4 mb-3">Debut du Lancement</strong>
+
+                                    <p class="mb-0">Nous sommes sur terrain depuis Aout, 16 2025</p>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 col-12 ps-lg-0">
+                                <div class="contact-info d-flex flex-column">
+                                    <strong class="site-footer-title d-block mb-3">Objectif</strong>
+
+                                    <p class="mb-2">
+                                        Numériser tout les Etablissement dans presque 26 Provinces de la RDCongo.
+                              </p>
+
+                                    <strong class="site-footer-title d-block mt-4 mb-3">Email</strong>
+
+                                    <p>
+                                        <a href="mailto:digicreateam@gmail.com">
+                                            digicreateam@gmail.com
+                                        </a>
+                                    </p>
+
+                                    <strong class="site-footer-title d-block mt-4 mb-3">Call</strong>
+
+                                    <p class="mb-0">
+                                        <a href="tel:+243982345963">
+                                            +243 982 345 963
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-12 mt-5 mt-lg-0">
+                                <form id="contactForm" action="https://script.google.com/macros/s/AKfycbwN9xiBGD-6BZXa8OHWynCQv8BumJVxSpcKAmDMuMBbIW7nFMao8u745qE4_N_P4_w/exec" method="post" class="custom-form contact-form" role="form">
+                                
+                                    <div class="row">
+                                        <div class="col-lg-6 col-md-6 col-12">
+                                            <div class="form-floating">
+                                                <input type="text" name="name" id="name" class="form-control" placeholder="Name" required="">
+                                                
+                                                <label for="floatingInput">Nom</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-6 col-md-6 col-12"> 
+                                            <div class="form-floating">
+                                                <input type="email" name="email" id="email" pattern="[^ @]*@[^ @]*" class="form-control" placeholder="Email address" required="">
+                                                
+                                                <label for="floatingInput">Adresse Mail</label>
+                                            </div>
+                                        </div>
+                                        <div class=""> 
+                                            <div class="form-floating">
+                                                <input type="tel" name="tel" id="tel" class="form-control" placeholder="Téléphone" required="">
+                                                
+                                                <label for="floatingInput">Téléphone</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-md-6 col-6">
+                                            <div class="form-check form-check-inline">
+                                                <input name="website" type="checkbox" class="form-check-input" id="inlineCheckbox1" value="1">
+
+                                                <label class="form-check-label" for="inlineCheckbox1">
+                                                    <i class="bi-globe form-check-icon"></i>
+                                                    <span class="form-check-label-text">Websites</span>
+                                                </label>
+                                          </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 col-6">
+                                            <div class="form-check form-check-inline">
+                                                <input name="branding" type="checkbox" class="form-check-input" id="inlineCheckbox2" value="1">
+
+                                                <label class="form-check-label" for="inlineCheckbox2">
+                                                    <i class="bi-lightbulb form-check-icon"></i>
+                                                    <span class="form-check-label-text">Etab</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 col-6">
+                                            <div class="form-check form-check-inline">
+                                                <input name="ecommerce" type="checkbox" class="form-check-input" id="inlineCheckbox3" value="1">
+
+                                                <label class="form-check-label" for="inlineCheckbox3">
+                                                    <i class="bi-phone form-check-icon"></i>
+                                                    <span class="form-check-label-text">Ecommerce</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 col-6">
+                                            <div class="form-check form-check-inline me-0">
+                                                <input name="seo" type="checkbox" class="form-check-input" id="inlineCheckbox4" value="1">
+
+                                                <label class="form-check-label" for="inlineCheckbox4">
+                                                    <i class="bi-google form-check-icon"></i>
+                                                    <span class="form-check-label-text">SEO</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-12 col-12">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="message" name="message" placeholder="Décrivez votre project | Problème"></textarea>
+                                                
+                                                <label for="floatingTextarea">Décrivez votre project | Problème</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-12 ms-auto">
+                                            <button type="submit" class="form-control">Envoyer</button>
+                                        </div>
+                                        <div class="col-lg-12 col-12 mt-3">
+                                            <div id="formMessage" style="display: none;" class="alert alert-success" role="alert">
+                                                ✅ Merci ! Votre message a été bien envoyé.
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="site-footer">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-12 col-12">
+                        <div class="copyright-text-wrap">
+                            <p class="mb-0">
+                                <span class="copyright-text">Copyright © 2025 <a href="index.html">DigiCreaTeam</a> Company. All rights reserved.</span>
+                                
+                                <a rel="sponsored" href="Politique.html">Politique de confidentialité</a>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </footer>
+
+        <!-- Chatbot IA Flottant -->
+        <div id="chatbot-container">
+            <div id="chatbot-toggle" class="chatbot-toggle">
+                <i class="bi bi-chat-dots"></i>
+            </div>
+            <div id="chatbot-window" class="chatbot-window">
+                <div class="chatbot-header">
+                    <h5>Assistant DigiCreaTeam</h5>
+                    <button id="chatbot-close" class="chatbot-close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="chatbot-messages" id="chatbot-messages">
+                    <div class="message bot-message">
+                        <div class="message-content">
+                            Bonjour ! Je suis l'assistant de DigiCreaTeam. Comment puis-je vous aider aujourd'hui ?
+                        </div>
+                    </div>
+                </div>
+                <div class="chatbot-input">
+                    <input type="text" id="chatbot-input-field" placeholder="Tapez votre message...">
+                    <button id="chatbot-send" class="chatbot-send">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- JAVASCRIPT FILES -->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery.sticky.js"></script>
+        <script src="js/click-scroll.js"></script>
+        <script src="js/jquery.magnific-popup.min.js"></script>
+        <script src="js/magnific-popup-options.js"></script>
+        <script src="js/custom.js"></script>
+        <script src="js/analytics.js"></script>
+        <script src="js/activity-simulator.js"></script>
+        
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Appliquer l'état du lien Offre depuis admin-dashboard
+                const offreLink = document.querySelector('a.nav-link.click-scroll[href="offre.html"]') || Array.from(document.querySelectorAll('a.nav-link.click-scroll')).find(a => (a.getAttribute('href') || '').toLowerCase().includes('offre.html'));
+                const offreItem = offreLink ? offreLink.closest('li.nav-item') : null;
+                function applyOffreStateFromStorage() {
+                    const saved = localStorage.getItem('offreLinkEnabled');
+                    const enabled = saved === null ? true : saved === 'true';
+                    if (!offreLink) return;
+                    const target = offreItem || offreLink;
+                    if (enabled) {
+                        target.style.display = '';
+                        offreLink.classList.remove('disabled');
+                        offreLink.setAttribute('aria-disabled', 'false');
+                        offreLink.title = '';
+                    } else {
+                        target.style.display = 'none';
+                        offreLink.classList.add('disabled');
+                        offreLink.setAttribute('aria-disabled', 'true');
+                        offreLink.title = 'Offre désactivée';
+                    }
+                }
+                applyOffreStateFromStorage();
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'offreLinkEnabled') {
+                        applyOffreStateFromStorage();
+                    }
+                });
+                const contactForm = document.getElementById("contactForm");
+                
+                if (contactForm) {
+                    contactForm.addEventListener("submit", function(e) {
+                        e.preventDefault(); // Empêche le rechargement
+                    
+                        const form = e.target;
+                        const url = form.action;
+                        const formData = new FormData(form);
+                    
+                        // Afficher un indicateur de chargement si nécessaire
+                        const submitButton = form.querySelector('button[type="submit"]');
+                        const originalButtonText = submitButton.textContent;
+                        submitButton.textContent = "Envoi en cours...";
+                        submitButton.disabled = true;
+                    
+                        fetch(url, {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Problème avec la réponse du serveur');
+                            }
+                            return response.text();
+                        })
+                        .then(responseText => {
+                            // Affiche le message de confirmation
+                            const messageBox = document.getElementById("formMessage");
+                            messageBox.style.display = "block";
+                            messageBox.className = "alert alert-success";
+                            messageBox.textContent = "✅ Merci ! Votre message a été bien envoyé.";
+                    
+                            // Vide le formulaire
+                            form.reset();
+                    
+                            // Réinitialiser le bouton
+                            submitButton.textContent = originalButtonText;
+                            submitButton.disabled = false;
+                    
+                            // Optionnel : cacher le message après 5 secondes
+                            setTimeout(() => {
+                                messageBox.style.display = "none";
+                            }, 5000);
+                        })
+                        .catch(error => {
+                            console.error("Erreur lors de l'envoi :", error);
+                            
+                            // Afficher un message d'erreur
+                            const messageBox = document.getElementById("formMessage");
+                            messageBox.style.display = "block";
+                            messageBox.className = "alert alert-danger";
+                            messageBox.textContent = "❌ Une erreur s'est produite lors de l'envoi. Veuillez réessayer.";
+                            
+                            // Réinitialiser le bouton
+                            submitButton.textContent = originalButtonText;
+                            submitButton.disabled = false;
+                        });
+                    });
+                } else {
+                    console.error("Le formulaire de contact n'a pas été trouvé dans la page");
+                }
+            });
+            </script>
+
+        <!-- Script pour le Chatbot IA -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const chatbotToggle = document.getElementById('chatbot-toggle');
+                const chatbotWindow = document.getElementById('chatbot-window');
+                const chatbotClose = document.getElementById('chatbot-close');
+                const chatbotInput = document.getElementById('chatbot-input-field');
+                const chatbotSend = document.getElementById('chatbot-send');
+                const chatbotMessages = document.getElementById('chatbot-messages');
+
+                // Base de connaissances enrichie pour les réponses IA
+                const knowledgeBase = {
+                    'salut': {
+                        type: 'greeting',
+                        content: 'Bonjour ! 👋 Je suis l\'assistant IA de DigiCreaTeam. Comment puis-je vous aider aujourd\'hui ?',
+                        quickActions: ['Nos services', 'Tarifs', 'Contact', 'Projets']
+                    },
+                    'bonjour': {
+                        type: 'greeting',
+                        content: 'Bonjour ! 👋 Je suis là pour vous aider avec nos services. Que souhaitez-vous savoir ?',
+                        quickActions: ['Nos services', 'Tarifs', 'Contact', 'Projets']
+                    },
+                    'service': {
+                        type: 'services',
+                        content: 'Voici nos services professionnels :',
+                        data: [
+                            { name: 'Sites Web', price: '$300', description: 'Design moderne et responsive' },
+                            { name: 'Numérisation d\'établissements', price: '$99', description: 'Gestion automatisée' },
+                            { name: 'E-commerce', price: '$1,200', description: 'Boutique en ligne complète' },
+                            { name: 'SEO', price: '$200', description: 'Optimisation pour les moteurs de recherche' }
+                        ]
+                    },
+                    'services': {
+                        type: 'services',
+                        content: 'Voici nos services professionnels :',
+                        data: [
+                            { name: 'Sites Web', price: '$300', description: 'Design moderne et responsive' },
+                            { name: 'Numérisation d\'établissements', price: '$99', description: 'Gestion automatisée' },
+                            { name: 'E-commerce', price: '$1,200', description: 'Boutique en ligne complète' },
+                            { name: 'SEO', price: '$200', description: 'Optimisation pour les moteurs de recherche' }
+                        ]
+                    },
+                    'prix': {
+                        type: 'pricing',
+                        content: 'Voici nos tarifs détaillés :',
+                        data: [
+                            { name: 'Sites Web', price: '$300', features: ['Design responsive', 'Sécurisé', 'Livraison rapide'] },
+                            { name: 'Numérisation d\'établissements', price: '$99', features: ['Gestion élèves/employés', 'Système de suivi', 'Automatisation'] },
+                            { name: 'E-commerce', price: '$1,200', features: ['Boutique complète', 'Gestion commandes', 'Paiements sécurisés'] },
+                            { name: 'SEO', price: '$200', features: ['Optimisation', 'Amélioration classement', 'Augmentation visibilité'] }
+                        ]
+                    },
+                    'tarif': {
+                        type: 'pricing',
+                        content: 'Voici nos tarifs détaillés :',
+                        data: [
+                            { name: 'Sites Web', price: '$300', features: ['Design responsive', 'Sécurisé', 'Livraison rapide'] },
+                            { name: 'Numérisation d\'établissements', price: '$99', features: ['Gestion élèves/employés', 'Système de suivi', 'Automatisation'] },
+                            { name: 'E-commerce', price: '$1,200', features: ['Boutique complète', 'Gestion commandes', 'Paiements sécurisés'] },
+                            { name: 'SEO', price: '$200', features: ['Optimisation', 'Amélioration classement', 'Augmentation visibilité'] }
+                        ]
+                    },
+                    'contact': {
+                        type: 'contact',
+                        content: 'Voici comment nous contacter :',
+                        data: [
+                            { type: 'email', value: 'digicreateam@gmail.com', icon: '📧' },
+                            { type: 'phone', value: '+243 982 345 963', icon: '📞' },
+                            { type: 'location', value: 'Kinshasa, RDC', icon: '📍' }
+                        ]
+                    },
+                    'email': {
+                        type: 'contact',
+                        content: 'Notre email :',
+                        data: [
+                            { type: 'email', value: 'digicreateam@gmail.com', icon: '📧' }
+                        ]
+                    },
+                    'téléphone': {
+                        type: 'contact',
+                        content: 'Notre numéro de téléphone :',
+                        data: [
+                            { type: 'phone', value: '+243 982 345 963', icon: '📞' }
+                        ]
+                    },
+                    'site web': {
+                        type: 'service_detail',
+                        service: 'Sites Web',
+                        content: 'Découvrez notre service de création de sites web :',
+                        features: ['Design moderne et responsive', 'Sécurisé et optimisé', 'Livraison rapide', 'Support technique'],
+                        price: '$300',
+                        cta: 'Intéressé par ce service ?'
+                    },
+                    'ecommerce': {
+                        type: 'service_detail',
+                        service: 'E-commerce',
+                        content: 'Notre service e-commerce complet :',
+                        features: ['Boutique en ligne complète', 'Gestion des commandes', 'Paiements sécurisés', 'Interface admin'],
+                        price: '$1,200',
+                        cta: 'Intéressé par ce service ?'
+                    },
+                    'seo': {
+                        type: 'service_detail',
+                        service: 'SEO',
+                        content: 'Optimisez votre visibilité en ligne :',
+                        features: ['Optimisation pour les moteurs de recherche', 'Amélioration du classement', 'Augmentation de la visibilité', 'Rapports détaillés'],
+                        price: '$200',
+                        cta: 'Voulez-vous plus d\'informations ?'
+                    },
+                    'établissement': {
+                        type: 'service_detail',
+                        service: 'Numérisation d\'établissements',
+                        content: 'Transformez votre établissement :',
+                        features: ['Gestion des élèves/employés', 'Système de suivi', 'Automatisation des processus', 'Rapports en temps réel'],
+                        price: '$99',
+                        cta: 'Votre établissement est-il intéressé ?'
+                    },
+                    'équipe': {
+                        type: 'team',
+                        content: 'Notre équipe d\'experts :',
+                        data: [
+                            { role: 'Fondateur', name: 'Monsieur Jordan SOFILA', expertise: 'Expert en Informatique' },
+                            { role: 'Localisation', name: 'Kinshasa, RDC', expertise: 'Service dans 26 provinces' }
+                        ]
+                    },
+                    'projet': {
+                        type: 'projects',
+                        content: 'Nos réalisations récentes :',
+                        data: [
+                            { name: 'Sites web pour entreprises', description: 'Solutions web personnalisées' },
+                            { name: 'Systèmes de gestion d\'établissements', description: 'Numérisation complète' },
+                            { name: 'Boutiques en ligne', description: 'E-commerce sur mesure' }
+                        ]
+                    },
+                    'projets': {
+                        type: 'projects',
+                        content: 'Nos réalisations récentes :',
+                        data: [
+                            { name: 'Sites web pour entreprises', description: 'Solutions web personnalisées' },
+                            { name: 'Systèmes de gestion d\'établissements', description: 'Numérisation complète' },
+                            { name: 'Boutiques en ligne', description: 'E-commerce sur mesure' }
+                        ]
+                    },
+                    'aide': {
+                        type: 'help',
+                        content: 'Je peux vous aider avec :',
+                        categories: [
+                            { name: 'Services', description: 'Informations sur nos services' },
+                            { name: 'Tarifs', description: 'Prix et devis' },
+                            { name: 'Contact', description: 'Coordonnées et formulaire' },
+                            { name: 'Projets', description: 'Nos réalisations' }
+                        ]
+                    },
+                    'help': {
+                        type: 'help',
+                        content: 'Je peux vous aider avec :',
+                        categories: [
+                            { name: 'Services', description: 'Informations sur nos services' },
+                            { name: 'Tarifs', description: 'Prix et devis' },
+                            { name: 'Contact', description: 'Coordonnées et formulaire' },
+                            { name: 'Projets', description: 'Nos réalisations' }
+                        ]
+                    }
+                };
+
+                // Fonction pour obtenir une réponse IA enrichie
+                function getAIResponse(userMessage) {
+                    const message = userMessage.toLowerCase().trim();
+                    
+                    // Recherche de mots-clés dans la base de connaissances
+                    for (const [keyword, response] of Object.entries(knowledgeBase)) {
+                        if (message.includes(keyword)) {
+                            return response;
+                        }
+                    }
+                    
+                    // Réponses par défaut selon le contexte
+                    if (message.includes('merci') || message.includes('thanks')) {
+                        return {
+                            type: 'simple',
+                            content: 'De rien ! 😊 Y a-t-il autre chose que je puisse vous aider ?',
+                            quickActions: ['Nos services', 'Tarifs', 'Contact']
+                        };
+                    }
+                    
+                    if (message.includes('au revoir') || message.includes('bye')) {
+                        return {
+                            type: 'simple',
+                            content: 'Au revoir ! 👋 N\'hésitez pas à revenir si vous avez d\'autres questions.',
+                            quickActions: []
+                        };
+                    }
+                    
+                    if (message.includes('comment') || message.includes('quoi')) {
+                        return {
+                            type: 'help',
+                            content: 'Je peux vous renseigner sur :',
+                            categories: [
+                                { name: 'Services', description: 'Nos services professionnels' },
+                                { name: 'Tarifs', description: 'Prix et devis' },
+                                { name: 'Contact', description: 'Coordonnées et formulaire' },
+                                { name: 'Projets', description: 'Nos réalisations' }
+                            ]
+                        };
+                    }
+                    
+                    // Réponse par défaut
+                    return {
+                        type: 'simple',
+                        content: 'Je comprends votre question. Pour vous aider au mieux, pouvez-vous me dire si vous vous intéressez à nos services, nos tarifs, ou si vous voulez nous contacter ?',
+                        quickActions: ['Nos services', 'Tarifs', 'Contact', 'Projets']
+                    };
+                }
+
+                // Fonction pour créer des boutons d'action rapide
+                function createQuickActions(actions) {
+                    if (!actions || actions.length === 0) return '';
+                    
+                    let html = '<div class="quick-actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;">';
+                    actions.forEach(action => {
+                        html += `<button class="quick-action-btn" onclick="sendQuickMessage('${action}')" style="
+                            background: rgba(102, 126, 234, 0.1);
+                            border: 1px solid rgba(102, 126, 234, 0.3);
+                            color: #667eea;
+                            padding: 6px 12px;
+                            border-radius: 15px;
+                            font-size: 12px;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='rgba(102, 126, 234, 0.2)'" onmouseout="this.style.background='rgba(102, 126, 234, 0.1)'">${action}</button>`;
+                    });
+                    html += '</div>';
+                    return html;
+                }
+
+                // Fonction pour créer une réponse structurée
+                function createStructuredResponse(response) {
+                    let html = '';
+                    
+                    switch (response.type) {
+                        case 'greeting':
+                            html = `<div class="message-content">${response.content}</div>`;
+                            html += createQuickActions(response.quickActions);
+                            break;
+                            
+                        case 'services':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>
+                                <ul class="response-list">`;
+                            response.data.forEach(service => {
+                                html += `<li>
+                                    <div>
+                                        <div class="service-name">${service.name}</div>
+                                        <div style="font-size: 12px; color: #666; margin-top: 2px;">${service.description}</div>
+                                    </div>
+                                    <div class="service-price">${service.price}</div>
+                                </li>`;
+                            });
+                            html += `</ul></div>`;
+                            break;
+                            
+                        case 'pricing':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>
+                                <ul class="response-list">`;
+                            response.data.forEach(item => {
+                                html += `<li>
+                                    <div>
+                                        <div class="service-name">${item.name}</div>
+                                        <div style="font-size: 12px; color: #666; margin-top: 2px;">${item.features.join(', ')}</div>
+                                    </div>
+                                    <div class="service-price">${item.price}</div>
+                                </li>`;
+                            });
+                            html += `</ul></div>`;
+                            break;
+                            
+                        case 'contact':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>`;
+                            response.data.forEach(contact => {
+                                html += `<div class="contact-info">
+                                    <span class="contact-icon">${contact.icon}</span>
+                                    <span>${contact.value}</span>
+                                </div>`;
+                            });
+                            html += `</div>`;
+                            break;
+                            
+                        case 'service_detail':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.service}</div>
+                                <div style="margin: 10px 0; color: #666;">${response.content}</div>
+                                <ul style="margin: 10px 0; padding-left: 20px;">`;
+                            response.features.forEach(feature => {
+                                html += `<li style="margin: 5px 0;">${feature}</li>`;
+                            });
+                            html += `</ul>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                                    <div class="service-price">${response.price}</div>
+                                    <div style="font-size: 12px; color: #666;">${response.cta}</div>
+                                </div>
+                            </div>`;
+                            break;
+                            
+                        case 'team':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>`;
+                            response.data.forEach(member => {
+                                html += `<div style="margin: 10px 0; padding: 10px; background: rgba(102, 126, 234, 0.05); border-radius: 8px;">
+                                    <div style="font-weight: 600; color: #333;">${member.role}</div>
+                                    <div style="color: #666; margin-top: 2px;">${member.name}</div>
+                                    <div style="font-size: 12px; color: #999; margin-top: 2px;">${member.expertise}</div>
+                                </div>`;
+                            });
+                            html += `</div>`;
+                            break;
+                            
+                        case 'projects':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>`;
+                            response.data.forEach(project => {
+                                html += `<div style="margin: 10px 0; padding: 10px; background: rgba(102, 126, 234, 0.05); border-radius: 8px;">
+                                    <div style="font-weight: 600; color: #333;">${project.name}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 2px;">${project.description}</div>
+                                </div>`;
+                            });
+                            html += `</div>`;
+                            break;
+                            
+                        case 'help':
+                            html = `<div class="response-card">
+                                <div class="response-title">${response.content}</div>`;
+                            response.categories.forEach(category => {
+                                html += `<div style="margin: 8px 0; padding: 8px; background: rgba(102, 126, 234, 0.05); border-radius: 6px;">
+                                    <div style="font-weight: 500; color: #333;">${category.name}</div>
+                                    <div style="font-size: 12px; color: #666; margin-top: 2px;">${category.description}</div>
+                                </div>`;
+                            });
+                            html += `</div>`;
+                            break;
+                            
+                        default:
+                            html = `<div class="message-content">${response.content}</div>`;
+                    }
+                    
+                    return html;
+                }
+
+                // Fonction pour envoyer un message rapide
+                window.sendQuickMessage = function(message) {
+                    chatbotInput.value = message;
+                    processUserMessage();
+                }
+
+                // Fonction pour afficher l'indicateur de frappe
+                function showTypingIndicator() {
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'message bot-message';
+                    typingDiv.id = 'typing-indicator';
+                    typingDiv.innerHTML = `
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    `;
+                    chatbotMessages.appendChild(typingDiv);
+                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                }
+
+                // Fonction pour masquer l'indicateur de frappe
+                function hideTypingIndicator() {
+                    const typingIndicator = document.getElementById('typing-indicator');
+                    if (typingIndicator) {
+                        typingIndicator.remove();
+                    }
+                }
+
+                // Fonction pour ajouter un message
+                function addMessage(content, isUser = false, isStructured = false) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+                    
+                    if (isStructured) {
+                        messageDiv.innerHTML = content;
+                    } else {
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'message-content';
+                        contentDiv.textContent = content;
+                        messageDiv.appendChild(contentDiv);
+                    }
+                    
+                    // Ajouter l'heure
+                    const timeDiv = document.createElement('div');
+                    timeDiv.className = 'message-time';
+                    timeDiv.textContent = new Date().toLocaleTimeString('fr-FR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    messageDiv.appendChild(timeDiv);
+                    
+                    chatbotMessages.appendChild(messageDiv);
+                    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                }
+
+                // Fonction pour traiter le message de l'utilisateur
+                function processUserMessage() {
+                    const userMessage = chatbotInput.value.trim();
+                    if (!userMessage) return;
+                    
+                    // Désactiver le bouton d'envoi
+                    chatbotSend.disabled = true;
+                    
+                    // Ajouter le message de l'utilisateur
+                    addMessage(userMessage, true);
+                    chatbotInput.value = '';
+                    
+                    // Afficher l'indicateur de frappe
+                    showTypingIndicator();
+                    
+                    // Simuler un délai de réponse plus réaliste
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        
+                        const aiResponse = getAIResponse(userMessage);
+                        
+                        // Vérifier si c'est une réponse structurée
+                        if (typeof aiResponse === 'object' && aiResponse.type) {
+                            const structuredContent = createStructuredResponse(aiResponse);
+                            addMessage(structuredContent, false, true);
+                        } else {
+                            addMessage(aiResponse, false);
+                        }
+                        
+                        // Réactiver le bouton d'envoi
+                        chatbotSend.disabled = false;
+                    }, 1500 + Math.random() * 1000); // Délai variable entre 1.5 et 2.5 secondes
+                }
+
+                // Événements
+                chatbotToggle.addEventListener('click', function() {
+                    chatbotWindow.classList.toggle('active');
+                    if (chatbotWindow.classList.contains('active')) {
+                        chatbotInput.focus();
+                    }
+                });
+
+                chatbotClose.addEventListener('click', function() {
+                    chatbotWindow.classList.remove('active');
+                });
+
+                chatbotSend.addEventListener('click', processUserMessage);
+
+                chatbotInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        processUserMessage();
+                    }
+                });
+
+                // Fermer le chatbot en cliquant à l'extérieur
+                const chatbotContainer = document.getElementById('chatbot-container');
+                document.addEventListener('click', function(e) {
+                    if (!chatbotContainer.contains(e.target) && chatbotWindow.classList.contains('active')) {
+                        chatbotWindow.classList.remove('active');
+                    }
+                });
+            });
+        </script>
+          
+                
+
+    </body>
+</html>
