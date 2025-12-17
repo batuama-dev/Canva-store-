@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../../api/axios';
-import { Mail, Send, Trash2, Eye } from 'lucide-react';
+import { Send, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 
 const ManageMessages = () => {
