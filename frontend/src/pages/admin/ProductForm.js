@@ -11,15 +11,35 @@ const generateSlug = (name) => {
     .replace(/[^\w-]+/g, '');
 };
 */
-// State for new files to be uploaded
-const [mainPreviewFile, setMainPreviewFile] = useState(null);
-const [mainPreviewUrl, setMainPreviewUrl] = useState('');
+const ProductForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = Boolean(id);
 
-const [galleryFiles, setGalleryFiles] = useState([]);
-const [galleryPreviewUrls, setGalleryPreviewUrls] = useState([]);
+  const [product, setProduct] = useState({
+    name: '',
+    category: '',
+    short_description: '',
+    description: '',
+    price: '',
+    discount_price: '',
+    is_featured: false,
+    main_preview: '', // This will hold the URL of the existing image in edit mode
+    gallery: [], // This will hold URLs of existing gallery images
+    canva_links: [''],
+    download_file_url: '', // This will hold the URL of the existing download file in edit mode
+    slug: ''
+  });
 
-// const [downloadFile, setDownloadFile] = useState(null);
-const [downloadFileName, setDownloadFileName] = useState('');
+  // State for new files to be uploaded
+  const [mainPreviewFile, setMainPreviewFile] = useState(null);
+  const [mainPreviewUrl, setMainPreviewUrl] = useState('');
+  
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviewUrls, setGalleryPreviewUrls] = useState([]);
+
+  // const [downloadFile, setDownloadFile] = useState(null);
+  const [downloadFileName, setDownloadFileName] = useState('');
 
 
   const [error, setError] = useState('');
