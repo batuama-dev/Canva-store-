@@ -1,39 +1,77 @@
 # Plan de Déploiement - Test de l'envoi d'e-mails
 
-**Date :** 15 Décembre 2025
+**Dernière mise à jour :** 16 Décembre 2025
 
-## 1. Contexte du Projet
+## 1. Objectif
 
-- **Application :** Site e-commerce `canva-store`.
-- **Frontend :** React, gère l'interface client et le panneau d'administration.
-- **Backend :** Node.js avec Express, gère la logique métier, les produits, et les ventes.
-- **Base de données :** MySQL.
+Déployer l'application `canva-store` (Backend Node.js + Frontend React) sur des services d'hébergement gratuits pour tester la fonctionnalité d'envoi d'e-mails, qui échoue en environnement local à cause d'un problème réseau (`ETIMEOUT`).
 
-## 2. Objectif Actuel
+---
 
-L'objectif est de déployer l'application sur des services d'hébergement gratuits afin de tester la fonctionnalité d'envoi d'e-mails, car les tests en local échouent.
+## 2. Statut Actuel : **En attente de l'action de l'utilisateur**
 
-## 3. Problème Rencontré
+Le code du projet a été préparé pour le déploiement et versionné avec Git. La prochaine étape consiste pour vous à pousser le code vers GitHub, puis à configurer les services d'hébergement.
 
-Nous avons finalisé l'implémentation d'un formulaire de contact et d'une interface d'administration pour gérer et répondre aux messages. La réponse est envoyée par e-mail via `Nodemailer`.
+---
 
-- **Erreur :** Lors de l'envoi d'un e-mail depuis l'environnement de développement local, le serveur backend retourne une erreur `500 Internal Server Error`.
-- **Cause identifiée :** Le log du backend montre une erreur `queryA ETIMEOUT smtp.gmail.com`. Il s'agit d'un problème de résolution DNS ou d'un blocage réseau sur la machine locale de l'utilisateur, qui empêche le serveur Node.js de contacter les serveurs SMTP de Google. Ce n'est pas une erreur de code ou d'authentification.
+## 3. Progression et Tâches Réalisées (16/12/2025)
 
-## 4. Plan d'Action pour Demain
+- **✅ Préparation du Backend pour le déploiement :**
+  - Fichier `package.json` mis à jour avec un script `start`.
+  - Connexion à la base de données (`config/database.js`) modifiée pour utiliser des variables d'environnement (`DB_HOST`, `DB_USER`, etc.).
+  - Identification des variables d'environnement nécessaires pour Render.
 
-La prochaine étape est de me guider pour déployer l'application et valider que la fonctionnalité d'envoi d'e-mails marche dans un environnement de production.
+- **✅ Préparation du Frontend pour le déploiement :**
+  - Création d'un module centralisé (`src/api/axios.js`) pour gérer l'URL de l'API.
+  - Tous les composants front-end ont été mis à jour pour utiliser ce module.
+  - Le `proxy` de `package.json` a été supprimé.
+  - La configuration est prête pour utiliser la variable `REACT_APP_API_URL` sur Netlify.
 
-- **Étape 1 : Déployer le Backend Node.js**
-  - Me guider dans le choix d'un hébergeur gratuit adapté pour Node.js (par exemple, Render).
-  - M'aider à préparer le backend pour le déploiement (vérification du `package.json`, ajout d'un script `start`).
-  - M'expliquer comment configurer les variables d'environnement sur l'hébergeur (`DATABASE_URL`, `EMAIL_USER`, `EMAIL_PASS`, etc.).
+- **✅ Préparation du Dépôt Git :**
+  - Initialisation d'un dépôt Git à la racine du projet.
+  - Création d'un fichier `.gitignore` pour exclure les `node_modules` et les fichiers `.env`.
+  - Résolution du problème de dépôt Git imbriqué (`frontend`).
+  - Le code est "commit" et prêt à être poussé vers GitHub.
 
-- **Étape 2 : Déployer le Frontend React**
-  - Me guider dans le choix d'un hébergeur gratuit pour les sites statiques (par exemple, Netlify ou Vercel).
-  - M'expliquer comment configurer la variable d'environnement pour l'URL de l'API backend (`REACT_APP_API_URL` ou similaire).
+---
 
-- **Étape 3 : Tester la fonctionnalité**
-  - Une fois les deux parties déployées, utiliser le formulaire de contact sur le site en ligne.
-  - Se connecter au panneau d'administration en ligne.
-  - Envoyer une réponse au message de test et vérifier si l'e-mail est reçu avec succès.
+## 4. Prochaines Étapes : À FAIRE PAR VOUS
+
+Suivez ces étapes dans l'ordre. Je suis prêt à vous guider pour chacune d'entre elles.
+
+- **Étape 1 : Publier le code sur GitHub**
+  - **Action :** Suivre les instructions que je vous ai données pour :
+    1. Créer un nouveau dépôt **public** et vide sur GitHub.
+    2. Copier l'URL du dépôt.
+    3. Exécuter les commandes `git remote add origin <URL>`, `git branch -M main`, et `git push -u origin main` dans votre terminal.
+
+- **Étape 2 : Déployer le Backend sur Render**
+  - **Action :**
+    1. Créez un compte sur **Render**.
+    2. Créez un **"New Web Service"** et connectez votre dépôt GitHub.
+    3. Configurez les paramètres :
+        - **Build Command :** `npm install`
+        - **Start Command :** `npm start`
+    4. Ajoutez les **variables d'environnement** suivantes :
+        - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_DATABASE`
+        - `EMAIL_USER` (votre adresse Gmail)
+        - `EMAIL_PASS` (votre **mot de passe d'application** Gmail)
+    5. Lancez le déploiement.
+
+- **Étape 3 : Déployer le Frontend sur Netlify**
+  - **Action :**
+    1. Créez un compte sur **Netlify**.
+    2. Créez un **"New site from Git"** et connectez le même dépôt GitHub.
+    3. Configurez les paramètres de build :
+        - **Base directory :** `frontend`
+        - **Build Command :** `npm run build`
+        - **Publish directory :** `frontend/build`
+    4. Ajoutez la variable d'environnement :
+        - `REACT_APP_API_URL` : L'URL de votre backend Render (ex: `https://votre-app.onrender.com`)
+
+- **Étape 4 : Test Final**
+  - **Action :**
+    1. Ouvrir l'URL de votre site Netlify.
+    2. Envoyer un message via le formulaire de contact.
+    3. Vous connecter à l'interface d'administration et répondre au message.
+    4. Vérifier la réception de l'e-mail.

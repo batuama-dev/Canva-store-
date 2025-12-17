@@ -1,12 +1,18 @@
 // backend/config/database.js
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'canva_store'
+// En production (sur Render), DATABASE_URL sera fourni.
+// En local, vous pouvez l'ajouter à un fichier .env si vous avez une BDD PostgreSQL locale.
+const connectionString = process.env.DATABASE_URL;
+
+const pool = new Pool({
+  connectionString,
+  // En production, Render nécessite une connexion SSL.
+  // En local, vous pourriez ne pas en avoir besoin.
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-module.exports = connection;
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};

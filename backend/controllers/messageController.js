@@ -1,6 +1,12 @@
 const db = require('../config/database');
 const nodemailer = require('nodemailer');
 
+// Helper pour gérer les erreurs
+const handleError = (res, error, defaultMessage = 'An internal server error occurred.') => {
+  console.error('--- ERROR ---', error);
+  res.status(500).json({ error: error.message || defaultMessage });
+};
+
 // Configure Nodemailer (replace with your actual email service credentials)
 const transporter = nodemailer.createTransport({
   service: 'gmail', // Or your email provider
@@ -13,41 +19,39 @@ const transporter = nodemailer.createTransport({
 // @desc    Submit a new message
 // @route   POST /api/messages
 // @access  Public
-exports.submitMessage = (req, res) => {
+exports.submitMessage = async (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
     return res.status(400).json({ message: 'Please provide name, email, and message.' });
   }
 
-  const query = 'INSERT INTO messages (sender_name, sender_email, message) VALUES (?, ?, ?)';
-  db.query(query, [name, email, message], (err, result) => {
-    if (err) {
-      console.error('Error inserting message:', err);
-      return res.status(500).json({ message: 'Error saving message to database.' });
-    }
-    res.status(201).json({ message: 'Message sent successfully!', messageId: result.insertId });
-  });
+  const query = 'INSERT INTO messages (sender_name, sender_email, message) VALUES ($1, $2, $3) RETURNING id';
+  try {
+    const { rows } = await db.query(query, [name, email, message]);
+    res.status(201).json({ message: 'Message sent successfully!', messageId: rows[0].id });
+  } catch (error) {
+    handleError(res, error, 'Error saving message to database.');
+  }
 };
 
 // @desc    Get all messages
 // @route   GET /api/messages
 // @access  Private/Admin
-exports.getAllMessages = (req, res) => {
+exports.getAllMessages = async (req, res) => {
   const query = 'SELECT * FROM messages ORDER BY created_at DESC';
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching messages:', err);
-      return res.status(500).json({ message: 'Error fetching messages from database.' });
-    }
-    res.json(results);
-  });
+  try {
+    const { rows } = await db.query(query);
+    res.json(rows);
+  } catch (error) {
+    handleError(res, error, 'Error fetching messages from database.');
+  }
 };
 
 // @desc    Reply to a message
 // @route   POST /api/messages/:id/reply
 // @access  Private/Admin
-exports.replyToMessage = (req, res) => {
+exports.replyToMessage = async (req, res) => {
   const { id } = req.params;
   const { replyText } = req.body;
 
@@ -55,55 +59,45 @@ exports.replyToMessage = (req, res) => {
     return res.status(400).json({ message: 'Reply text is required.' });
   }
 
-  const findMessageQuery = 'SELECT * FROM messages WHERE id = ?';
-  db.query(findMessageQuery, [id], (err, messages) => {
-    if (err || messages.length === 0) {
+  try {
+    const findMessageQuery = 'SELECT * FROM messages WHERE id = $1';
+    const { rows, rowCount } = await db.query(findMessageQuery, [id]);
+
+    if (rowCount === 0) {
       return res.status(404).json({ message: 'Message not found.' });
     }
 
-    const message = messages[0];
+    const message = rows[0];
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: message.sender_email,
       subject: `Re: Your message to Wisecom-Store`,
-      text: `Hello ${message.sender_name},
-
-Thank you for your message. Here is our reply:
-
----
-${replyText}
----
-
-Original message:
-"${message.message}"
-
-Best regards,
-The Wisecom-Store Team`,
+      text: `Hello ${message.sender_name},\n\nThank you for your message. Here is our reply:\n\n---\n${replyText}\n---\n\nOriginal message:\n"${message.message}"\n\nBest regards,\nThe Wisecom-Store Team`,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-        return res.status(500).json({ message: 'Failed to send reply email.' });
-      }
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
-      // Update message status to 'replied'
-      const updateStatusQuery = 'UPDATE messages SET status = "replied" WHERE id = ?';
-      db.query(updateStatusQuery, [id], (err) => {
-        if (err) {
-          console.error('Error updating message status:', err);
-          // Non-critical error, so we still return success for the email
-        }
-        res.status(200).json({ message: 'Reply sent successfully.' });
-      });
-    });
-  });
+    // Update message status to 'replied'
+    const updateStatusQuery = "UPDATE messages SET status = 'replied' WHERE id = $1";
+    await db.query(updateStatusQuery, [id]);
+    
+    res.status(200).json({ message: 'Reply sent successfully.' });
+
+  } catch (error) {
+    // Distinguer erreur BDD et erreur envoi email
+    if (error.responseCode) { // Erreur de nodemailer
+        handleError(res, error, 'Failed to send reply email.');
+    } else { // Autre erreur (probablement BDD)
+        handleError(res, error, 'An error occurred while processing the reply.');
+    }
+  }
 };
 
 // @desc    Update message status (e.g., to 'read')
 // @route   PUT /api/messages/:id/status
 // @access  Private/Admin
-exports.updateMessageStatus = (req, res) => {
+exports.updateMessageStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
@@ -111,15 +105,14 @@ exports.updateMessageStatus = (req, res) => {
         return res.status(400).json({ message: 'Invalid status provided.' });
     }
 
-    const query = 'UPDATE messages SET status = ? WHERE id = ?';
-    db.query(query, [status, id], (err, result) => {
-        if (err) {
-            console.error('Error updating message status:', err);
-            return res.status(500).json({ message: 'Failed to update message status.' });
-        }
-        if (result.affectedRows === 0) {
+    const query = 'UPDATE messages SET status = $1 WHERE id = $2';
+    try {
+        const result = await db.query(query, [status, id]);
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Message not found.' });
         }
         res.status(200).json({ message: 'Message status updated successfully.' });
-    });
+    } catch (error) {
+        handleError(res, error, 'Failed to update message status.');
+    }
 };
