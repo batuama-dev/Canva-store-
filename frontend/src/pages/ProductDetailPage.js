@@ -14,7 +14,7 @@ const ProductDetailPage = () => {
     window.scrollTo(0, 0);
 
     setLoading(true);
-    axios.get(`http://localhost:5000/api/products/${id}`)
+    axios.get(`/api/products/${id}`)
       .then(res => {
         setProduct(res.data);
         setLoading(false);
@@ -28,9 +28,10 @@ const ProductDetailPage = () => {
 
   const allImages = React.useMemo(() => {
     if (!product) return [];
+    const baseUrl = process.env.REACT_APP_API_URL;
     return [
-      ...(product.image_url ? [`http://localhost:5000${product.image_url}`] : []),
-      ...(product.images ? product.images.map(img => `http://localhost:5000${img.image_url}`) : [])
+      ...(product.image_url ? [`${baseUrl}${product.image_url}`] : []),
+      ...(product.images ? product.images.map(img => `${baseUrl}${img.image_url}`) : [])
     ];
   }, [product]);
 

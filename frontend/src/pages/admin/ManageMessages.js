@@ -13,7 +13,7 @@ const ManageMessages = () => {
 
     const fetchMessages = useCallback(() => {
         setLoading(true);
-        axios.get('http://localhost:5000/api/messages')
+        axios.get('/api/messages')
             .then(res => {
                 setMessages(res.data);
                 setLoading(false);
@@ -34,7 +34,7 @@ const ManageMessages = () => {
         setReplyStatus({}); // Reset reply status
         if (message.status === 'new') {
             // Mark as read
-            axios.put(`http://localhost:5000/api/messages/${message.id}/status`, { status: 'read' })
+            axios.put(`/api/messages/${message.id}/status`, { status: 'read' })
                 .then(() => fetchMessages()); // Refresh list to show status change
         }
     };
@@ -43,7 +43,7 @@ const ManageMessages = () => {
         e.preventDefault();
         setReplyStatus({ loading: true, error: null, success: null });
 
-        axios.post(`http://localhost:5000/api/messages/${selectedMessage.id}/reply`, { replyText })
+        axios.post(`/api/messages/${selectedMessage.id}/reply`, { replyText })
             .then(() => {
                 setReplyStatus({ loading: false, success: 'Reply sent successfully!', error: null });
                 setReplyText('');
