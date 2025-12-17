@@ -135,10 +135,10 @@ const ProductForm = () => {
   const handleDownloadFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setDownloadFile(file);
+      // setDownloadFile(file);
       setDownloadFileName(file.name);
     } else {
-      setDownloadFile(null);
+      // setDownloadFile(null);
       setDownloadFileName(isEditing && product.download_file_url ? product.download_file_url.split('/').pop() : '');
     }
   };
