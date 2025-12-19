@@ -8,7 +8,7 @@ const AboutSection = () => {
           {/* Image Column */}
           <div className="w-full lg:w-1/2 px-4 mb-8 lg:mb-0">
             <img 
-              src="/uploads/1765307611187-IMG-20240320-WA0072.jpg" 
+              src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/1765307611187-IMG-20240320-WA0072.jpg`} 
               className="w-full h-auto max-h-96 rounded-2xl shadow-lg" 
               alt="About Us" 
             />
