@@ -7,16 +7,29 @@ const handleError = (res, error) => {
   res.status(500).json({ error: error.message });
 };
 
+// Helper pour construire une URL absolue de manière robuste
+const buildAbsoluteUrl = (req, relativeUrl) => {
+  // Si l'URL est nulle ou déjà absolue, ne rien faire
+  if (!relativeUrl || relativeUrl.startsWith('http')) {
+    return relativeUrl;
+  }
+  // Utiliser 'x-forwarded-proto' pour détecter le protocole original derrière un proxy comme Render
+  // et forcer https en production sur Render
+  const protocol = req.headers['x-forwarded-proto'] === 'https' || req.get('host').includes('onrender.com') ? 'https' : req.protocol;
+  const host = req.get('host');
+  return `${protocol}://${host}${relativeUrl}`;
+};
+
+
 // For public view
 exports.getAllProducts = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products WHERE active = true');
     const productsWithFullUrls = rows.map(product => {
-      if (product.image_url) {
-        const imageUrl = `${req.protocol}://${req.get('host')}${product.image_url}`;
-        return { ...product, image_url: imageUrl };
-      }
-      return product;
+      return { 
+        ...product, 
+        image_url: buildAbsoluteUrl(req, product.image_url) 
+      };
     });
     res.json(productsWithFullUrls);
   } catch (error) {
@@ -29,11 +42,10 @@ exports.getAllProductsAdmin = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products');
     const productsWithFullUrls = rows.map(product => {
-      if (product.image_url) {
-        const imageUrl = `${req.protocol}://${req.get('host')}${product.image_url}`;
-        return { ...product, image_url: imageUrl };
-      }
-      return product;
+      return { 
+        ...product, 
+        image_url: buildAbsoluteUrl(req, product.image_url) 
+      };
     });
     res.json(productsWithFullUrls);
   } catch (error) {
@@ -51,21 +63,16 @@ exports.getProductById = async (req, res) => {
     const product = productResult.rows[0];
 
     // Convertir l'URL de l'image principale du produit
-    if (product.image_url) {
-      product.image_url = `${req.protocol}://${req.get('host')}${product.image_url}`;
-    }
+    product.image_url = buildAbsoluteUrl(req, product.image_url);
 
     const imagesResult = await db.query('SELECT * FROM product_images WHERE product_id = $1', [id]);
     
     // Convertir les URLs des images de la galerie
     product.images = imagesResult.rows.map(img => {
-      if (img.image_url) {
-        return {
-          ...img,
-          image_url: `${req.protocol}://${req.get('host')}${img.image_url}`
-        };
-      }
-      return img;
+      return {
+        ...img,
+        image_url: buildAbsoluteUrl(req, img.image_url)
+      };
     });
     
     res.json(product);
@@ -139,11 +146,6 @@ exports.uploadProductImages = async (req, res) => {
     if (!files || files.length === 0) {
         return res.status(400).json({ error: 'Aucun fichier téléversé' });
     }
-
-    // NOTE: pg ne supporte pas la syntaxe multi-insert de la même manière que mysql2.
-    // Nous devons construire la requête manuellement ou faire des insertions multiples.
-    // Pour la simplicité et la sécurité (éviter l'injection SQL), nous insérons une par une.
-    // Une solution plus performante utiliserait une transaction et une requête construite.
     
     try {
         let insertedCount = 0;
