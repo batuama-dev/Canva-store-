@@ -50,13 +50,33 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 
 ### Étape 3 : Configurer les Variables d'Environnement sur Render
 
+*   **Statut :** **TERMINÉ** ✅
+*   **Action :** Les variables d'environnement (`DATABASE_URL`, `EMAIL_USER`, `EMAIL_PASS`, `NODE_ENV`) ont été correctement configurées pour le service backend sur Render.
+
+### Étape 4 : Déployer le Frontend sur Netlify
+
+*   **Statut :** **TERMINÉ (avec problèmes)** ✅
+*   **Action :** Le frontend a été déployé avec succès sur Netlify après plusieurs itérations de débogage (modules manquants, erreurs ESLint, erreurs de syntaxe).
+*   **Problème :** Le site est en ligne, mais il ne parvient pas à charger les données du backend (produits, images).
+
+---
+
+## 3. Problème Actuel : Initialisation de la Base de Données Échouée
+
+*   **Symptômes :**
+    *   Le déploiement du backend sur Render échoue avec une erreur `500 (Internal Server Error)`.
+    *   Les logs du backend Render montrent une erreur `error: relation "products" does not exist`.
+*   **Analyse :** La base de données PostgreSQL sur Render est bien connectée, mais elle est vide. Les tables (`products`, `messages`, etc.) n'ont pas été créées.
+*   **Tentatives Échouées :** Plusieurs tentatives d'exécution du script `database/schema.pgsql` via le client de base de données DBeaver n'ont pas abouti, bien qu'aucune erreur claire ne soit affichée par DBeaver, suggérant un problème de transaction ou de connexion silencieux.
+
+### Prochaine Étape : Forcer l'Initialisation de la Base de Données via `psql`
+
+Pour contourner les problèmes potentiels de DBeaver, nous allons utiliser l'outil en ligne de commande `psql` directement depuis votre machine locale. C'est la méthode la plus directe et fiable pour interagir avec PostgreSQL.
+
 *   **Statut :** **EN COURS** ⏳
-*   **Action :** Suivre les instructions pour mettre à jour les variables d'environnement du **service backend** sur Render :
-    *   `DATABASE_URL` : L'URL de connexion interne de la nouvelle base de données PostgreSQL.
-    *   `EMAIL_USER` et `EMAIL_PASS` : Les identifiants pour l'envoi d'e-mails.
-    *   `NODE_ENV` : Mettre la valeur `production`.
-
-### Étape 4 : Déployer les Changements
-
-*   **Statut :** En attente (dépend de l'Étape 3)
-*   **Action :** "Commit" et "Push" de toutes les modifications du code (passage à PostgreSQL) vers GitHub. Cela déclenchera un nouveau déploiement sur Render, qui devrait cette fois-ci réussir.
+*   **Action :** Suivre les instructions pour :
+    1.  Installer les **"Command Line Tools"** de PostgreSQL sur votre machine Windows.
+    2.  Ouvrir un terminal et naviguer jusqu'au dossier d'installation de `psql`.
+    3.  Utiliser la **"PSQL Command"** fournie par Render pour se connecter à la base de données distante.
+    4.  Exécuter le script SQL `database/schema.pgsql` directement dans le terminal `psql`.
+*   **Objectif :** Créer avec succès les tables dans la base de données Render et résoudre l'erreur `relation "products" does not exist`.

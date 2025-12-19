@@ -11,7 +11,14 @@ const handleError = (res, error) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products WHERE active = true');
-    res.json(rows);
+    const productsWithFullUrls = rows.map(product => {
+      if (product.image_url) {
+        const imageUrl = `${req.protocol}://${req.get('host')}${product.image_url}`;
+        return { ...product, image_url: imageUrl };
+      }
+      return product;
+    });
+    res.json(productsWithFullUrls);
   } catch (error) {
     handleError(res, error);
   }
@@ -21,7 +28,14 @@ exports.getAllProducts = async (req, res) => {
 exports.getAllProductsAdmin = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products');
-    res.json(rows);
+    const productsWithFullUrls = rows.map(product => {
+      if (product.image_url) {
+        const imageUrl = `${req.protocol}://${req.get('host')}${product.image_url}`;
+        return { ...product, image_url: imageUrl };
+      }
+      return product;
+    });
+    res.json(productsWithFullUrls);
   } catch (error) {
     handleError(res, error);
   }
@@ -30,14 +44,29 @@ exports.getAllProductsAdmin = async (req, res) => {
 exports.getProductById = async (req, res) => {
   const { id } = req.params;
   try {
-    const productResult = await db.query('SELECT * FROM products WHERE id = ', [id]);
+    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [id]);
     if (productResult.rowCount === 0) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
     const product = productResult.rows[0];
 
-    const imagesResult = await db.query('SELECT * FROM product_images WHERE product_id = ', [id]);
-    product.images = imagesResult.rows;
+    // Convertir l'URL de l'image principale du produit
+    if (product.image_url) {
+      product.image_url = `${req.protocol}://${req.get('host')}${product.image_url}`;
+    }
+
+    const imagesResult = await db.query('SELECT * FROM product_images WHERE product_id = $1', [id]);
+    
+    // Convertir les URLs des images de la galerie
+    product.images = imagesResult.rows.map(img => {
+      if (img.image_url) {
+        return {
+          ...img,
+          image_url: `${req.protocol}://${req.get('host')}${img.image_url}`
+        };
+      }
+      return img;
+    });
     
     res.json(product);
   } catch (error) {
@@ -51,7 +80,7 @@ exports.createProduct = async (req, res) => {
     return res.status(400).json({ error: 'Image du produit requise' });
   }
   const image_url = '/uploads/' + req.file.filename;
-  const query = 'INSERT INTO products (name, description, price, quantity, image_url) VALUES (, $2, $3, $4, $5) RETURNING id';
+  const query = 'INSERT INTO products (name, description, price, quantity, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING id';
   
   try {
     const { rows } = await db.query(query, [name, description, price, quantity, image_url]);
@@ -71,10 +100,10 @@ exports.updateProduct = async (req, res) => {
 
     if (req.file) {
       const image_url = '/uploads/' + req.file.filename;
-      query = 'UPDATE products SET name = , description = $2, price = $3, quantity = $4, image_url = $5 WHERE id = $6';
+      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, image_url = $5 WHERE id = $6';
       queryParams = [name, description, price, quantity, image_url, id];
     } else {
-      query = 'UPDATE products SET name = , description = $2, price = $3, quantity = $4 WHERE id = $5';
+      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4 WHERE id = $5';
       queryParams = [name, description, price, quantity, id];
     }
 
@@ -93,7 +122,7 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await db.query('UPDATE products SET active = false WHERE id = ', [id]);
+    const result = await db.query('UPDATE products SET active = false WHERE id = $1', [id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
@@ -120,7 +149,7 @@ exports.uploadProductImages = async (req, res) => {
         let insertedCount = 0;
         for (const file of files) {
             const imageUrl = '/uploads/' + file.filename;
-            const query = 'INSERT INTO product_images (product_id, image_url) VALUES (, $2)';
+            const query = 'INSERT INTO product_images (product_id, image_url) VALUES ($1, $2)';
             const result = await db.query(query, [productId, imageUrl]);
             insertedCount += result.rowCount;
         }
