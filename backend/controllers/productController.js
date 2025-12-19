@@ -7,31 +7,14 @@ const handleError = (res, error) => {
   res.status(500).json({ error: error.message });
 };
 
-// Helper pour construire une URL absolue de manière robuste
-const buildAbsoluteUrl = (req, relativeUrl) => {
-  // Si l'URL est nulle ou déjà absolue, ne rien faire
-  if (!relativeUrl || relativeUrl.startsWith('http')) {
-    return relativeUrl;
-  }
-  // Utiliser 'x-forwarded-proto' pour détecter le protocole original derrière un proxy comme Render
-  // et forcer https en production sur Render
-  const protocol = req.headers['x-forwarded-proto'] === 'https' || req.get('host').includes('onrender.com') ? 'https' : req.protocol;
-  const host = req.get('host');
-  return `${protocol}://${host}${relativeUrl}`;
-};
+
 
 
 // For public view
 exports.getAllProducts = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products WHERE active = true');
-    const productsWithFullUrls = rows.map(product => {
-      return { 
-        ...product, 
-        image_url: buildAbsoluteUrl(req, product.image_url) 
-      };
-    });
-    res.json(productsWithFullUrls);
+    res.json(rows);
   } catch (error) {
     handleError(res, error);
   }
@@ -41,13 +24,7 @@ exports.getAllProducts = async (req, res) => {
 exports.getAllProductsAdmin = async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM products');
-    const productsWithFullUrls = rows.map(product => {
-      return { 
-        ...product, 
-        image_url: buildAbsoluteUrl(req, product.image_url) 
-      };
-    });
-    res.json(productsWithFullUrls);
+    res.json(rows);
   } catch (error) {
     handleError(res, error);
   }
@@ -62,18 +39,9 @@ exports.getProductById = async (req, res) => {
     }
     const product = productResult.rows[0];
 
-    // Convertir l'URL de l'image principale du produit
-    product.image_url = buildAbsoluteUrl(req, product.image_url);
-
     const imagesResult = await db.query('SELECT * FROM product_images WHERE product_id = $1', [id]);
     
-    // Convertir les URLs des images de la galerie
-    product.images = imagesResult.rows.map(img => {
-      return {
-        ...img,
-        image_url: buildAbsoluteUrl(req, img.image_url)
-      };
-    });
+    product.images = imagesResult.rows;
     
     res.json(product);
   } catch (error) {
@@ -86,7 +54,7 @@ exports.createProduct = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Image du produit requise' });
   }
-  const image_url = '/uploads/' + req.file.filename;
+  const image_url = req.file.path; // URL from Cloudinary
   const query = 'INSERT INTO products (name, description, price, quantity, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING id';
   
   try {
@@ -106,7 +74,7 @@ exports.updateProduct = async (req, res) => {
     let queryParams;
 
     if (req.file) {
-      const image_url = '/uploads/' + req.file.filename;
+      const image_url = req.file.path; // URL from Cloudinary
       query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, image_url = $5 WHERE id = $6';
       queryParams = [name, description, price, quantity, image_url, id];
     } else {
@@ -150,7 +118,7 @@ exports.uploadProductImages = async (req, res) => {
     try {
         let insertedCount = 0;
         for (const file of files) {
-            const imageUrl = '/uploads/' + file.filename;
+            const imageUrl = file.path; // URL from Cloudinary
             const query = 'INSERT INTO product_images (product_id, image_url) VALUES ($1, $2)';
             const result = await db.query(query, [productId, imageUrl]);
             insertedCount += result.rowCount;
