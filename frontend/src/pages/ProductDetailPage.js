@@ -28,10 +28,10 @@ const ProductDetailPage = () => {
 
   const allImages = React.useMemo(() => {
     if (!product) return [];
-    const baseUrl = process.env.REACT_APP_API_URL;
+    // The image_url from the backend is now a full Cloudinary URL, so no need to prepend baseUrl
     return [
-      ...(product.image_url ? [`${baseUrl}${product.image_url}`] : []),
-      ...(product.images ? product.images.map(img => `${baseUrl}${img.image_url}`) : [])
+      ...(product.image_url ? [product.image_url] : []),
+      ...(product.images ? product.images.map(img => img.image_url) : [])
     ];
   }, [product]);
 
