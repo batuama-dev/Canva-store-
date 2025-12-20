@@ -50,15 +50,15 @@ exports.getProductById = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
-  const { name, description, price, quantity } = req.body;
+  const { name, description, price, quantity, category } = req.body;
   if (!req.file) {
     return res.status(400).json({ error: 'Image du produit requise' });
   }
   const image_url = req.file.path; // URL from Cloudinary
-  const query = 'INSERT INTO products (name, description, price, quantity, image_url) VALUES ($1, $2, $3, $4, $5) RETURNING id';
+  const query = 'INSERT INTO products (name, description, price, quantity, image_url, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id';
   
   try {
-    const { rows } = await db.query(query, [name, description, price, quantity, image_url]);
+    const { rows } = await db.query(query, [name, description, price, quantity, image_url, category]);
     res.status(201).json({ id: rows[0].id, ...req.body, image_url });
   } catch (error) {
     handleError(res, error);
@@ -67,7 +67,7 @@ exports.createProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, quantity } = req.body;
+  const { name, description, price, quantity, category } = req.body;
   
   try {
     let query;
@@ -75,11 +75,11 @@ exports.updateProduct = async (req, res) => {
 
     if (req.file) {
       const image_url = req.file.path; // URL from Cloudinary
-      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, image_url = $5 WHERE id = $6';
-      queryParams = [name, description, price, quantity, image_url, id];
+      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, image_url = $5, category = $6 WHERE id = $7';
+      queryParams = [name, description, price, quantity, image_url, category, id];
     } else {
-      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4 WHERE id = $5';
-      queryParams = [name, description, price, quantity, id];
+      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, category = $5 WHERE id = $6';
+      queryParams = [name, description, price, quantity, category, id];
     }
 
     const result = await db.query(query, queryParams);

@@ -19,7 +19,6 @@ const ProductForm = () => {
   const [product, setProduct] = useState({
     name: '',
     category: '',
-    short_description: '',
     description: '',
     price: '',
     discount_price: '',
@@ -84,12 +83,43 @@ const ProductForm = () => {
     };
   }, [mainPreviewUrl, galleryPreviewUrls]);
 
+  const categoryPriceMap = {
+    'Pack Graphiste Pro': '50',
+    'Pack Réseaux sociaux': '20',
+    'Pack Entrepreneurs': '15',
+    'Pack Événements': '10'
+  };
+
+  const priceCategoryMap = {
+    '50': 'Pack Graphiste Pro',
+    '20': 'Pack Réseaux sociaux',
+    '15': 'Pack Entrepreneurs',
+    '10': 'Pack Événements'
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setProduct(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+
+    if (name === 'category') {
+      const newPrice = categoryPriceMap[value] || '';
+      setProduct(prev => ({
+        ...prev,
+        category: value,
+        price: newPrice
+      }));
+    } else if (name === 'price') {
+      const newCategory = priceCategoryMap[value] || '';
+      setProduct(prev => ({
+        ...prev,
+        price: value,
+        category: newCategory
+      }));
+    } else {
+      setProduct(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   const handleMainPreviewChange = (e) => {
@@ -176,6 +206,7 @@ const ProductForm = () => {
     formData.append('name', product.name);
     formData.append('description', product.description);
     formData.append('price', product.price);
+    formData.append('category', product.category); // Ensure category is sent
     // Assuming 'quantity' is required by the backend but not in the form, let's add a default
     formData.append('quantity', product.quantity || 1); 
 
@@ -227,9 +258,16 @@ const ProductForm = () => {
             <FormSection title="Informations Générales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField label="Nom du pack" name="name" value={product.name} onChange={handleChange} required />
-                    <InputField label="Catégorie" name="category" value={product.category} onChange={handleChange} placeholder="ex: Instagram, Business..." required />
+                    <div>
+                        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie <span className="text-red-500">*</span></label>
+                        <select id="category" name="category" value={product.category} onChange={handleChange} required className="form-input">
+                            <option value="">Sélectionner une catégorie</option>
+                            {Object.keys(categoryPriceMap).map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-                <div className="mt-6"><InputField label="Petite description" name="short_description" value={product.short_description} onChange={handleChange} placeholder="Apparaît sur la carte du produit" required /></div>
                 <div className="mt-6">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description longue</label>
                     <textarea id="description" name="description" value={product.description} onChange={handleChange} rows="6" className="form-input" placeholder="Description détaillée pour la page produit"></textarea>
@@ -239,8 +277,16 @@ const ProductForm = () => {
             {/* Pricing Section */}
             <FormSection title="Prix et Visibilité">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField label="Prix Normal (€)" name="price" type="number" value={product.price} onChange={handleChange} required />
-                    <InputField label="Prix Promotionnel (€)" name="discount_price" type="number" value={product.discount_price} onChange={handleChange} placeholder="Optionnel" />
+                    <div>
+                        <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Prix Normal ($) <span className="text-red-500">*</span></label>
+                        <select id="price" name="price" value={product.price} onChange={handleChange} required className="form-input">
+                            <option value="">Sélectionner un prix</option>
+                            {Object.keys(priceCategoryMap).map(p => (
+                                <option key={p} value={p}>{p}$</option>
+                            ))}
+                        </select>
+                    </div>
+                    <InputField label="Prix Promotionnel ($)" name="discount_price" type="number" value={product.discount_price} onChange={handleChange} placeholder="Optionnel" />
                 </div>
                 <div className="mt-6"><label className="flex items-center space-x-3 cursor-pointer"><input type="checkbox" name="is_featured" checked={product.is_featured} onChange={handleChange} className="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" /><span className="text-gray-700 font-medium">Mettre en avant sur la page d'accueil</span></label></div>
             </FormSection>

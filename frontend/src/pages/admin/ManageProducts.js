@@ -29,8 +29,8 @@ const ManageProducts = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       try {
         await axios.delete(`/api/products/${productId}`);
-        // Refresh the list after deleting
-        fetchProducts();
+        // Mettre à jour l'état local pour enlever le produit supprimé
+        setProducts(products.filter(p => p.id !== productId));
       } catch (err) {
         setError('Erreur lors de la suppression du produit.');
       }

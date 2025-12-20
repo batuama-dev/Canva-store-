@@ -61,22 +61,39 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 
 ---
 
-## 3. Problème Actuel : Initialisation de la Base de Données Échouée
+## 3. Problème d'Initialisation de la Base de Données
+
+*   **Statut :** **TERMINÉ** ✅
+*   **Analyse :** L'initialisation de la base de données via `psql` a fonctionné. Les tables sont créées. Le code a ensuite été corrigé pour résoudre des problèmes de "Mixed Content" et des vulnérabilités SQL, puis a été commité et poussé.
+*   **Résultat :** Le backend se déploie avec le dernier commit, mais de nouveaux problèmes apparaissent.
+
+---
+
+## 4. Problème Actuel : Disparition des Images et Erreurs d'Affichage
+
+**Dernière mise à jour :** 19 Décembre 2025
 
 *   **Symptômes :**
-    *   Le déploiement du backend sur Render échoue avec une erreur `500 (Internal Server Error)`.
-    *   Les logs du backend Render montrent une erreur `error: relation "products" does not exist`.
-*   **Analyse :** La base de données PostgreSQL sur Render est bien connectée, mais elle est vide. Les tables (`products`, `messages`, etc.) n'ont pas été créées.
-*   **Tentatives Échouées :** Plusieurs tentatives d'exécution du script `database/schema.pgsql` via le client de base de données DBeaver n'ont pas abouti, bien qu'aucune erreur claire ne soit affichée par DBeaver, suggérant un problème de transaction ou de connexion silencieux.
+    1.  Après un déploiement, la plupart des images des produits ne s'affichent pas (erreur `404 Not Found`).
+    2.  Certaines images provoquent des erreurs de type `net::ERR_NAME_NOT_RESOLVED` à cause d'une URL malformée (`https://...http//...`).
+    3.  L'image de la section "À propos" est également manquante.
 
-### Prochaine Étape : Forcer l'Initialisation de la Base de Données via `psql`
+*   **Analyse du Problème :**
+    *   **Cause Principale (Erreurs 404) : Système de fichiers éphémère de Render.**
+        *   Le service backend de Render utilise un stockage "éphémère". Cela signifie qu'à chaque redéploiement, tout le contenu du disque est effacé, y compris le dossier `backend/uploads` où les images sont sauvegardées. Les images uploadées sont donc perdues.
 
-Pour contourner les problèmes potentiels de DBeaver, nous allons utiliser l'outil en ligne de commande `psql` directement depuis votre machine locale. C'est la méthode la plus directe et fiable pour interagir avec PostgreSQL.
+    *   **Cause Secondaire (URL malformées) :**
+        *   Ce problème a été corrigé dans le dernier commit (`cce35c9`) en rendant la logique de construction d'URL plus robuste pour gérer les URLs déjà présentes en base de données et les problèmes de `http`/`https`.
 
-*   **Statut :** **EN COURS** ⏳
-*   **Action :** Suivre les instructions pour :
-    1.  Installer les **"Command Line Tools"** de PostgreSQL sur votre machine Windows.
-    2.  Ouvrir un terminal et naviguer jusqu'au dossier d'installation de `psql`.
-    3.  Utiliser la **"PSQL Command"** fournie par Render pour se connecter à la base de données distante.
-    4.  Exécuter le script SQL `database/schema.pgsql` directement dans le terminal `psql`.
-*   **Objectif :** Créer avec succès les tables dans la base de données Render et résoudre l'erreur `relation "products" does not exist`.
+*   **Solution Adoptée et Résultats :**
+
+    ### Étape 1 : Gestion du Stockage d'Images (Cloudinary)
+
+    *   **Statut :** **TERMINÉ** ✅
+    *   **Action :** L'utilisation d'un Disque Persistent sur Render s'étant avérée une option payante, une solution alternative a été implémentée. Le projet a été intégré avec **Cloudinary** pour le stockage et la gestion des images. Toutes les images sont désormais uploadées vers Cloudinary et servies depuis cette plateforme, assurant leur persistance au-delà des déploiements.
+
+    ### Étape 2 : Correction de l'image de la section "À propos"
+
+    *   **Statut :** **TERMINÉ** ✅
+    *   **Action :** Le chemin de l'image dans le composant `frontend/src/components/common/AboutSection.js` a été corrigé.
+

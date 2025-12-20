@@ -46,7 +46,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl shadow-lg">
           <h4 className="text-sm font-semibold text-gray-500">Chiffre d'affaires total</h4>
-          <p className="text-3xl font-bold text-indigo-600">{totalRevenue.toFixed(2)}$</p>
+          <p className="text-3xl font-bold text-indigo-600">{totalRevenue > 0 ? totalRevenue.toFixed(2) : '0'}$</p>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-lg">
           <h4 className="text-sm font-semibold text-gray-500">Ventes totales</h4>
@@ -63,7 +63,7 @@ const Dashboard = () => {
               <div key={item.product_name} className="bg-white p-6 rounded-xl shadow-md">
                 <h3 className="font-bold text-lg text-gray-800">{item.product_name}</h3>
                 <p className="text-gray-600 mt-2">Ventes: <span className="font-semibold">{item.sales_count}</span></p>
-                <p className="text-green-600 font-bold mt-1">Revenu: {item.total_revenue || 0}$</p>
+                <p className="text-green-600 font-bold mt-1">Revenu: {item.total_revenue > 0 ? parseFloat(item.total_revenue).toFixed(2) : '0'}$</p>
               </div>
             ))}
           </div>
