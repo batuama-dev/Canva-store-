@@ -12,7 +12,8 @@ const ManageProducts = () => {
     // Using the new admin endpoint
     axios.get('/api/products/admin/all')
       .then(res => {
-        setProducts(res.data);
+        const activeProducts = res.data.filter(p => p.active);
+        setProducts(activeProducts);
         setLoading(false);
       })
       .catch(err => {

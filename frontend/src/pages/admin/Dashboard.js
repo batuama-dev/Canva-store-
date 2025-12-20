@@ -28,7 +28,7 @@ const Dashboard = () => {
   }, []);
 
   const totalRevenue = stats.reduce((acc, item) => acc + (item.total_revenue || 0), 0);
-  const totalSales = stats.reduce((acc, item) => acc + item.sales_count, 0);
+  const totalSales = stats.reduce((acc, item) => acc + Number(item.sales_count || 0), 0);
 
   if (loading) {
     return <div>Chargement du tableau de bord...</div>;

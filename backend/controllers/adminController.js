@@ -16,6 +16,7 @@ exports.getSalesStats = async (req, res) => {
       p.price
     FROM products p
     LEFT JOIN sales s ON p.id = s.product_id
+    WHERE p.active = true
     GROUP BY p.id, p.name, p.price
   `;
   
