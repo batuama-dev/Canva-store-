@@ -23,7 +23,7 @@ const ContactSection = () => {
     e.preventDefault();
     setStatus({ loading: true, error: null, success: null });
 
-    axios.post('http://localhost:5000/api/messages', formData)
+    axios.post('/api/messages', formData)
       .then(response => {
         setStatus({ loading: false, error: null, success: 'Message envoyé avec succès ! Nous vous répondrons bientôt.' });
         setFormData({ name: '', email: '', message: '' }); // Reset form
