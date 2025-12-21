@@ -1,26 +1,13 @@
 const db = require('../config/database');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
-// Helper pour gérer les erreurs
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Helper pour gérer les erreurs (version sécurisée)
 const handleError = (res, error, defaultMessage = 'An internal server error occurred.') => {
-  console.error('--- DETAILED ERROR ---', JSON.stringify(error, null, 2));
-  // DEBUGGING ONLY: Sending detailed error to client because logs are unavailable
-  res.status(500).json({ 
-    message: 'DEBUGGING: ' + (error.message || defaultMessage),
-    details: JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)))
-  });
+  console.error('--- ERROR ---', error);
+  res.status(500).json({ error: error.message || defaultMessage });
 };
-
-// Configure Nodemailer with explicit settings for Gmail
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER, // Store in .env file
-    pass: process.env.EMAIL_PASS,   // Store in .env file
-  },
-});
 
 // @desc    Submit a new message
 // @route   POST /api/messages
@@ -74,15 +61,16 @@ exports.replyToMessage = async (req, res) => {
     }
 
     const message = rows[0];
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
+    const msg = {
       to: message.sender_email,
+      from: 'ibatuama@gmail.com', // Must be the verified sender email in SendGrid
       subject: `Re: Your message to Wisecom-Store`,
       text: `Hello ${message.sender_name},\n\nThank you for your message. Here is our reply:\n\n---\n${replyText}\n---\n\nOriginal message:\n"${message.message}"\n\nBest regards,\nThe Wisecom-Store Team`,
+      // You can also use an `html` property for richer content
     };
 
-    // Send the email
-    await transporter.sendMail(mailOptions);
+    // Send the email using SendGrid
+    await sgMail.send(msg);
 
     // Update message status to 'replied'
     const updateStatusQuery = "UPDATE messages SET status = 'replied' WHERE id = $1";
@@ -91,12 +79,10 @@ exports.replyToMessage = async (req, res) => {
     res.status(200).json({ message: 'Reply sent successfully.' });
 
   } catch (error) {
-    // Log the full error object for detailed debugging
-    console.error('--- FULL NODEMAILER ERROR ---', JSON.stringify(error, null, 2));
-
     // Distinguer erreur BDD et erreur envoi email
-    if (error.code) { // Nodemailer errors often have a 'code' property (e.g., 'ECONNECTION')
-        handleError(res, error, 'Failed to send reply email.');
+    if (error.response) { // SendGrid errors have a 'response' property
+        console.error('--- SENDGRID ERROR ---', error.response.body);
+        handleError(res, error, 'Failed to send reply email via SendGrid.');
     } else { // Autre erreur (probablement BDD)
         handleError(res, error, 'An error occurred while processing the reply.');
     }
