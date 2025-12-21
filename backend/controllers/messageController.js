@@ -4,7 +4,11 @@ const nodemailer = require('nodemailer');
 // Helper pour gérer les erreurs
 const handleError = (res, error, defaultMessage = 'An internal server error occurred.') => {
   console.error('--- DETAILED ERROR ---', JSON.stringify(error, null, 2));
-  res.status(500).json({ error: error.message || defaultMessage });
+  // DEBUGGING ONLY: Sending detailed error to client because logs are unavailable
+  res.status(500).json({ 
+    message: 'DEBUGGING: ' + (error.message || defaultMessage),
+    details: JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)))
+  });
 };
 
 // Configure Nodemailer with explicit settings for Gmail
