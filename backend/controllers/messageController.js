@@ -3,13 +3,15 @@ const nodemailer = require('nodemailer');
 
 // Helper pour gérer les erreurs
 const handleError = (res, error, defaultMessage = 'An internal server error occurred.') => {
-  console.error('--- ERROR ---', error);
+  console.error('--- DETAILED ERROR ---', JSON.stringify(error, null, 2));
   res.status(500).json({ error: error.message || defaultMessage });
 };
 
-// Configure Nodemailer (replace with your actual email service credentials)
+// Configure Nodemailer with explicit settings for Gmail
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Or your email provider
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER, // Store in .env file
     pass: process.env.EMAIL_PASS,   // Store in .env file
@@ -85,8 +87,11 @@ exports.replyToMessage = async (req, res) => {
     res.status(200).json({ message: 'Reply sent successfully.' });
 
   } catch (error) {
+    // Log the full error object for detailed debugging
+    console.error('--- FULL NODEMAILER ERROR ---', JSON.stringify(error, null, 2));
+
     // Distinguer erreur BDD et erreur envoi email
-    if (error.responseCode) { // Erreur de nodemailer
+    if (error.code) { // Nodemailer errors often have a 'code' property (e.g., 'ECONNECTION')
         handleError(res, error, 'Failed to send reply email.');
     } else { // Autre erreur (probablement BDD)
         handleError(res, error, 'An error occurred while processing the reply.');
