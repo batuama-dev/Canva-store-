@@ -96,4 +96,78 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 
     *   **Statut :** **TERMINÉ** ✅
     *   **Action :** Le chemin de l'image dans le composant `frontend/src/components/common/AboutSection.js` a été corrigé.
+---
 
+## 5. Optimisation de l'Interface d'Administration
+
+*   **Statut :** **TERMINÉ** ✅
+*   **Analyse :** Plusieurs améliorations ont été apportées pour rendre l'interface d'administration plus intuitive et fonctionnelle.
+*   **Actions réalisées :**
+    1.  **Suppression de produits :**
+        *   La suppression d'un produit le retire maintenant de la liste de manière instantanée, sans nécessiter de rechargement.
+        *   Les statistiques du tableau de bord n'incluent plus les produits "soft-deleted" (marqués comme inactifs).
+        *   Correction d'un bug d'affichage sur le tableau de bord qui affichait "00000000" pour les ventes nulles.
+    2.  **Formulaire de produit :**
+        *   Le champ `short_description` (description courte), qui n'était pas utilisé, a été supprimé.
+        *   Les champs `category` et `price` ont été transformés en menus déroulants synchronisés pour éviter les erreurs de saisie et simplifier la création de produits.
+        *   Le backend a été mis à jour pour sauvegarder correctement la catégorie du produit.
+
+---
+
+
+
+## 6. Test de la Messagerie
+
+
+
+*   **Statut :** **EN COURS** ⏳
+
+*   **Objectif :** Valider la fonctionnalité d'envoi d'e-mails de bout en bout.
+
+
+
+### Partie 1 : Envoi Client -> Admin
+
+
+
+*   **Statut :** **TERMINÉ** ✅
+
+*   **Analyse :** Le formulaire de contact fonctionnait en local mais échouait en production car il tentait de contacter `localhost`.
+
+*   **Solution :** La configuration de l'API dans le code frontend a été corrigée pour utiliser l'URL de production du backend Render.
+
+*   **Résultat :** Les clients peuvent maintenant envoyer des messages avec succès.
+
+
+
+### Partie 2 : Réponse Admin -> Client par E-mail
+
+
+
+*   **Statut :** **DIAGNOSTIC TERMINÉ / EN COURS D'IMPLÉMENTATION** ⏳
+
+*   **Problème :** La fonctionnalité permettant à un administrateur de répondre à un message échoue systématiquement en production avec une erreur `500 Internal Server Error`.
+
+*   **Analyse et Diagnostic (21/12/2025) :**
+
+    *   Grâce à une modification temporaire du code pour exposer les erreurs détaillées au client (les logs de Render étant payants), nous avons pu identifier l'erreur racine.
+
+    *   **Cause Racine :** L'application reçoit une erreur `ETIMEDOUT` (Connection timeout) lors de la tentative de connexion au serveur SMTP de Gmail. Cela confirme que **le plan gratuit de Render bloque les connexions sortantes sur les ports SMTP** (587, 465) pour prévenir le spam, ce qui est une pratique courante.
+
+*   **Solution Provisoire Adoptée :**
+
+    *   Pour contourner ce blocage réseau, il a été décidé de remplacer l'envoi par SMTP (Nodemailer) par un service transactionnel basé sur une API, qui communique via HTTPS (un port toujours ouvert).
+
+    *   Le service choisi est **SendGrid**.
+
+    *   **Note de Contexte :** Cette solution est adoptée spécifiquement pour la phase de développement et de test sur un hébergement gratuit. Le quota du plan gratuit de SendGrid (approx. 100 e-mails/jour) est suffisant pour les tests mais devra être réévalué pour une mise en production à grande échelle avec un hébergement payant.
+
+*   **Prochaines Étapes :**
+
+    1.  **Action Utilisateur :** Créer un compte sur **SendGrid** et générer une **clé API**.
+
+    2.  **Action Système :** Remplacer les variables d'environnement `EMAIL_USER` et `EMAIL_PASS` par `SENDGRID_API_KEY` sur Render.
+
+    3.  **Action Système :** Mettre à jour le code du backend pour remplacer `Nodemailer` par le paquet `@sendgrid/mail`.
+
+    4.  **Action Système :** Annuler la modification de débogage qui expose les erreurs détaillées au client pour restaurer la sécurité.
