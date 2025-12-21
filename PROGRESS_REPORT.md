@@ -120,7 +120,7 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 
 
 
-*   **Statut :** **EN COURS** ⏳
+*   **Statut :** **TERMINÉ** ✅
 
 *   **Objectif :** Valider la fonctionnalité d'envoi d'e-mails de bout en bout.
 
@@ -144,30 +144,32 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 
 
 
-*   **Statut :** **DIAGNOSTIC TERMINÉ / EN COURS D'IMPLÉMENTATION** ⏳
+*   **Statut :** **TERMINÉ** ✅
 
-*   **Problème :** La fonctionnalité permettant à un administrateur de répondre à un message échoue systématiquement en production avec une erreur `500 Internal Server Error`.
+*   **Problème :** La fonctionnalité de réponse par e-mail échouait en production avec une erreur `ETIMEDOUT` (Connection timeout).
 
 *   **Analyse et Diagnostic (21/12/2025) :**
 
-    *   Grâce à une modification temporaire du code pour exposer les erreurs détaillées au client (les logs de Render étant payants), nous avons pu identifier l'erreur racine.
+    *   La cause racine identifiée était un blocage des ports SMTP sortants par le plan gratuit de l'hébergeur Render.
 
-    *   **Cause Racine :** L'application reçoit une erreur `ETIMEDOUT` (Connection timeout) lors de la tentative de connexion au serveur SMTP de Gmail. Cela confirme que **le plan gratuit de Render bloque les connexions sortantes sur les ports SMTP** (587, 465) pour prévenir le spam, ce qui est une pratique courante.
+*   **Solution Implémentée :**
 
-*   **Solution Provisoire Adoptée :**
+    *   Pour contourner ce blocage, le système d'envoi d'e-mails a été migré de Nodemailer (SMTP) vers **SendGrid** (API).
 
-    *   Pour contourner ce blocage réseau, il a été décidé de remplacer l'envoi par SMTP (Nodemailer) par un service transactionnel basé sur une API, qui communique via HTTPS (un port toujours ouvert).
+    *   **Implémentation :**
 
-    *   Le service choisi est **SendGrid**.
+        1.  Création d'un compte SendGrid et d'une clé API par l'utilisateur.
 
-    *   **Note de Contexte :** Cette solution est adoptée spécifiquement pour la phase de développement et de test sur un hébergement gratuit. Le quota du plan gratuit de SendGrid (approx. 100 e-mails/jour) est suffisant pour les tests mais devra être réévalué pour une mise en production à grande échelle avec un hébergement payant.
+        2.  Mise à jour des variables d'environnement sur Render avec la `SENDGRID_API_KEY`.
 
-*   **Prochaines Étapes :**
+        3.  Installation du paquet `@sendgrid/mail` dans le backend.
 
-    1.  **Action Utilisateur :** Créer un compte sur **SendGrid** et générer une **clé API**.
+        4.  Remplacement de la logique de Nodemailer par celle de SendGrid dans le `messageController`.
 
-    2.  **Action Système :** Remplacer les variables d'environnement `EMAIL_USER` et `EMAIL_PASS` par `SENDGRID_API_KEY` sur Render.
+        5.  Restauration d'une gestion d'erreurs sécurisée (ne plus exposer les détails au client).
 
-    3.  **Action Système :** Mettre à jour le code du backend pour remplacer `Nodemailer` par le paquet `@sendgrid/mail`.
+    *   **Note de Contexte :** La solution SendGrid (plan gratuit) est une mesure provisoire pour la phase de développement. Pour une production à grande échelle, le quota d'e-mails devra être réévalué.
 
-    4.  **Action Système :** Annuler la modification de débogage qui expose les erreurs détaillées au client pour restaurer la sécurité.
+*   **Résultat Final : L'envoi de réponses par e-mail est maintenant entièrement fonctionnel en production.** ✅
+
+
