@@ -17,9 +17,9 @@ const AboutSection = () => {
           {/* Text Content Column */}
           <div className="w-full lg:w-1/2 px-4 mt-8 lg:mt-0">
             <div className="about-thumb">
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">Wisecom-Store</h3>
+              <h3 className="text-3xl font-bold text-gray-800 mb-4">Templyfast</h3>
               <p className="text-gray-600 mb-4 text-justify">
-                Nous sommes ravis de vous présenter Wisecom-Store, votre destination ultime pour des templates Canva de haute qualité.
+                Nous sommes ravis de vous présenter Templyfast, votre destination ultime pour des templates Canva de haute qualité.
                 Notre mission est de vous offrir des designs élégants et professionnels pour tous vos besoins créatifs,
                 que vous soyez un entrepreneur, un marketeur ou un particulier.
               </p>

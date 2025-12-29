@@ -55,7 +55,7 @@ const ContactSection = () => {
             <div className="space-y-4 mb-8">
               <div className="flex items-center">
                 <Mail className="w-5 h-5 text-blue-600 mr-4" />
-                <a href="mailto:wisecom-store@gmail.com" className="text-gray-700 hover:text-blue-600">wisecom-store@gmail.com</a>
+                <a href="mailto:templyfast@gmail.com" className="text-gray-700 hover:text-blue-600">templyfast@gmail.com</a>
               </div>
               <div className="flex items-center">
                 <Phone className="w-5 h-5 text-blue-600 mr-4" />
