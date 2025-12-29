@@ -191,5 +191,40 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
     *   Mise à jour du sujet et du corps de l'e-mail de réponse pour refléter le nom "Templyfast".
     *   Traduction complète du modèle de l'e-mail de réponse en français dans `backend/controllers/messageController.js`, avec une structure améliorée.
 *   **Résultat :** L'application envoie désormais des réponses aux clients depuis `templyfast@gmail.com` avec un modèle d'e-mail clair et professionnel en français. ✅
+---
 
+## 8. Étape Suivante : Intégration du Paiement avec Stripe (Mode Test)
 
+**Objectif :** Intégrer Stripe comme solution de paiement pour simuler le processus de commande de bout en bout en environnement de test.
+
+### Plan d'Action
+
+#### Partie 1 : Configuration du Backend
+
+1.  **Installation et Configuration :**
+    *   Installer la librairie `stripe` pour Node.js (`npm install stripe`).
+    *   Ajouter les clés d'API Stripe (clé secrète) dans les variables d'environnement sur Render.
+2.  **Création de la Session de Paiement :**
+    *   Créer une nouvelle route (ex: `/api/checkout`) et un contrôleur (`checkoutController.js`).
+    *   Développer un endpoint (`/create-checkout-session`) qui prend les informations du panier et crée une session de paiement Stripe.
+3.  **Gestion de la Confirmation de Paiement (Webhook) :**
+    *   Créer un endpoint webhook pour écouter les événements de Stripe (ex: `checkout.session.completed`).
+    *   Dans ce webhook, mettre à jour la base de données pour enregistrer la vente et l'état de la commande.
+
+#### Partie 2 : Implémentation du Frontend
+
+1.  **Installation :**
+    *   Installer la librairie `@stripe/stripe-js` dans le projet React.
+2.  **Interface de Paiement :**
+    *   Sur la page de paiement (`CheckoutPage.js`), ajouter un bouton "Payer avec Stripe".
+    *   Au clic, appeler l'endpoint backend `/create-checkout-session` pour obtenir l'ID de la session.
+3.  **Redirection vers Stripe :**
+    *   Utiliser la fonction `redirectToCheckout` de Stripe.js pour rediriger l'utilisateur vers la page de paiement hébergée par Stripe.
+4.  **Pages de Redirection :**
+    *   Créer des pages de confirmation (`OrderSuccessPage.js`) et d'annulation (`OrderCancelPage.js`) vers lesquelles Stripe redirigera l'utilisateur après la transaction.
+
+#### Partie 3 : Base de Données
+
+1.  **Mise à jour du Schéma :**
+    *   Vérifier que la table `sales` (ventes) est apte à stocker les informations de la transaction (ID de session Stripe, statut, etc.).
+    *   Le webhook se chargera de remplir cette table.

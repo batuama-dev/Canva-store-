@@ -17,6 +17,7 @@ app.use('/api/sales', require('./routes/sales'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/messages', require('./routes/messages'));
+app.use('/api/checkout', require('./routes/checkout'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
