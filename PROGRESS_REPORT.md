@@ -171,5 +171,25 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
     *   **Note de Contexte :** La solution SendGrid (plan gratuit) est une mesure provisoire pour la phase de développement. Pour une production à grande échelle, le quota d'e-mails devra être réévalué.
 
 *   **Résultat Final : L'envoi de réponses par e-mail est maintenant entièrement fonctionnel en production.** ✅
+---
+
+## 7. Mises à Jour du 29 Décembre 2025
+
+### 7.1. Changement de la Marque "Wisecom-Store" en "Templyfast"
+
+*   **Description :** Renommage global de l'identité de marque dans le frontend de l'application.
+*   **Actions :**
+    *   Mise à jour des occurrences de "Wisecom-Store" par "Templyfast" dans les composants de navigation, la section "À propos", la section de contact et le pied de page (`frontend/src/components/common/Header.js`, `AboutSection.js`, `ContactSection.js`, `Footer.js`).
+    *   Mise à jour de l'adresse e-mail de contact dans `ContactSection.js` de `wisecom-store@gmail.com` à `templyfast@gmail.com`.
+*   **Résultat :** Cohérence de l'identité de marque "Templyfast" à travers l'interface utilisateur. ✅
+
+### 7.2. Mise à Jour de la Configuration d'Envoi d'E-mails
+
+*   **Description :** Modification de l'adresse e-mail d'expédition des réponses aux messages et traduction du modèle d'e-mail.
+*   **Actions :**
+    *   Changement de l'adresse e-mail de l'expéditeur (champ `from`) dans `backend/controllers/messageController.js` de `ibatuama@gmail.com` à `templyfast@gmail.com` (nécessitant une vérification préalable sur SendGrid).
+    *   Mise à jour du sujet et du corps de l'e-mail de réponse pour refléter le nom "Templyfast".
+    *   Traduction complète du modèle de l'e-mail de réponse en français dans `backend/controllers/messageController.js`, avec une structure améliorée.
+*   **Résultat :** L'application envoie désormais des réponses aux clients depuis `templyfast@gmail.com` avec un modèle d'e-mail clair et professionnel en français. ✅
 
 
