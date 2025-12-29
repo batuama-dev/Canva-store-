@@ -65,7 +65,7 @@ exports.replyToMessage = async (req, res) => {
       to: message.sender_email,
       from: 'templyfast@gmail.com', // Must be the verified sender email in SendGrid
       subject: `Re: Your message to Templyfast`,
-      text: `Hello ${message.sender_name},\n\nThank you for your message. Here is our reply:\n\n---\n${replyText}\n---\n\nOriginal message:\n"${message.message}"\n\nBest regards,\nThe Templyfast Team`,
+      text: `Bonjour à vous ${message.sender_name},\n\nPour votre message à Templyfast :\n"${message.message}"\n\nVoici notre réponse :\n\n---\n${replyText}\n---\n\nCordialement,\nL'équipe de Templyfast 😉`,
       // You can also use an `html` property for richer content
     };
 
