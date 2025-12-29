@@ -1,6 +1,6 @@
 # Rapport de Progression - Déploiement `canva-store`
 
-**Dernière mise à jour :** 17 Décembre 2025
+**Dernière mise à jour :** 29 Décembre 2025
 
 ## Objectif Final
 
@@ -200,31 +200,32 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 ### Plan d'Action
 
 #### Partie 1 : Configuration du Backend
-
+*   **Statut :** **TERMINÉ** ✅
 1.  **Installation et Configuration :**
-    *   Installer la librairie `stripe` pour Node.js (`npm install stripe`).
-    *   Ajouter les clés d'API Stripe (clé secrète) dans les variables d'environnement sur Render.
+    *   Installer la librairie `stripe` pour Node.js (`npm install stripe`). **(Effectué)**
+    *   Ajouter les clés d'API Stripe (clé secrète) dans les variables d'environnement sur Render. **(Instructions fournies, et utilisateur confirmé)**
 2.  **Création de la Session de Paiement :**
-    *   Créer une nouvelle route (ex: `/api/checkout`) et un contrôleur (`checkoutController.js`).
-    *   Développer un endpoint (`/create-checkout-session`) qui prend les informations du panier et crée une session de paiement Stripe.
-3.  **Gestion de la Confirmation de Paiement (Webhook) :**
-    *   Créer un endpoint webhook pour écouter les événements de Stripe (ex: `checkout.session.completed`).
-    *   Dans ce webhook, mettre à jour la base de données pour enregistrer la vente et l'état de la commande.
+    *   Créer une nouvelle route (ex: `/api/checkout`) et un contrôleur (`checkoutController.js`). **(Effectué)**
+    *   Développer un endpoint (`/create-checkout-session`) qui prend les informations du panier et crée une session de paiement Stripe. **(Effectué, incluant l'ID produit en metadata)**
+3.  **Gestion de la Confirmation de Paiement :**
+    *   Créer un contrôleur (`confirmStripeSession` dans `saleController.js`) et une route (`/api/sales/confirm-stripe-session`) pour gérer la confirmation de session Stripe et enregistrer la vente. **(Effectué)**
+    *   *Note: Le webhook Stripe (gestion asynchrone des événements) reste une amélioration future.*
 
 #### Partie 2 : Implémentation du Frontend
-
+*   **Statut :** **TERMINÉ** ✅
 1.  **Installation :**
-    *   Installer la librairie `@stripe/stripe-js` dans le projet React.
-2.  **Interface de Paiement :**
-    *   Sur la page de paiement (`CheckoutPage.js`), ajouter un bouton "Payer avec Stripe".
-    *   Au clic, appeler l'endpoint backend `/create-checkout-session` pour obtenir l'ID de la session.
-3.  **Redirection vers Stripe :**
-    *   Utiliser la fonction `redirectToCheckout` de Stripe.js pour rediriger l'utilisateur vers la page de paiement hébergée par Stripe.
+    *   Installer la librairie `@stripe/stripe-js` et `@stripe/react-stripe-js` dans le projet React. **(Effectué)**
+2.  **Configuration du Provider :**
+    *   Intégrer le `Elements` Provider de Stripe dans `App.js`. **(Effectué)**
+    *   Ajouter la clé publique Stripe (`REACT_APP_STRIPE_PUBLIC_KEY`) dans un fichier `.env` du frontend. **(Instructions fournies, fichier .env créé)**
+3.  **Interface de Paiement :**
+    *   Modifier `CheckoutPage.js` pour initier une session de paiement Stripe via le backend et rediriger l'utilisateur. **(Effectué)**
 4.  **Pages de Redirection :**
-    *   Créer des pages de confirmation (`OrderSuccessPage.js`) et d'annulation (`OrderCancelPage.js`) vers lesquelles Stripe redirigera l'utilisateur après la transaction.
+    *   Modifier `OrderSuccessPage.js` pour confirmer la session Stripe (`session_id`) via le backend et récupérer le lien de téléchargement. **(Effectué)**
+    *   La redirection en cas d'annulation (`cancel_url`) est gérée par un retour à la page de checkout.
 
 #### Partie 3 : Base de Données
-
+*   **Statut :** **TERMINÉ** ✅
 1.  **Mise à jour du Schéma :**
-    *   Vérifier que la table `sales` (ventes) est apte à stocker les informations de la transaction (ID de session Stripe, statut, etc.).
-    *   Le webhook se chargera de remplir cette table.
+    *   Ajouter la colonne `stripe_session_id` (`VARCHAR(255) UNIQUE`) à la table `sales` pour stocker l'ID de session Stripe. **(Fichier de migration créé et exécuté par l'utilisateur)**
+    *   Le contrôleur `saleController.js` a été mis à jour pour enregistrer cet ID lors de la confirmation de session.

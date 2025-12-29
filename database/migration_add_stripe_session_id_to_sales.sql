@@ -1,0 +1,2 @@
+ALTER TABLE sales
+ADD COLUMN stripe_session_id VARCHAR(255) UNIQUE;

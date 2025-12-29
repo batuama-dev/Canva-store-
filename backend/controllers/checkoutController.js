@@ -10,6 +10,9 @@ const createCheckoutSession = async (req, res) => {
         product_data: {
           name: product.name,
           images: [product.image_url],
+          metadata: {
+            product_id: product.id, // Include your internal product ID here
+          },
         },
         unit_amount: Math.round(product.price * 100), // Stripe expects the amount in cents
       },
