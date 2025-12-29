@@ -63,9 +63,9 @@ exports.replyToMessage = async (req, res) => {
     const message = rows[0];
     const msg = {
       to: message.sender_email,
-      from: 'ibatuama@gmail.com', // Must be the verified sender email in SendGrid
-      subject: `Re: Your message to Wisecom-Store`,
-      text: `Hello ${message.sender_name},\n\nThank you for your message. Here is our reply:\n\n---\n${replyText}\n---\n\nOriginal message:\n"${message.message}"\n\nBest regards,\nThe Wisecom-Store Team`,
+      from: 'templyfast@gmail.com', // Must be the verified sender email in SendGrid
+      subject: `Re: Your message to Templyfast`,
+      text: `Hello ${message.sender_name},\n\nThank you for your message. Here is our reply:\n\n---\n${replyText}\n---\n\nOriginal message:\n"${message.message}"\n\nBest regards,\nThe Templyfast Team`,
       // You can also use an `html` property for richer content
     };
 
