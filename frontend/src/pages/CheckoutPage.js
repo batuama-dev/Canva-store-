@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from '../api/axios';
 import { useStripe, useElements } from '@stripe/react-stripe-js'; // Import Stripe hooks
 
 const CheckoutPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const stripe = useStripe(); // Initialize stripe
   const elements = useElements(); // Initialize elements (though not strictly needed for redirectToCheckout)
   const [product, setProduct] = useState(null);
