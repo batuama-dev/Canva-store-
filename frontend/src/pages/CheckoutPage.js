@@ -5,14 +5,21 @@ import { useStripe, useElements } from '@stripe/react-stripe-js'; // Import Stri
 
 const CheckoutPage = () => {
   const { id } = useParams();
-  const stripe = useStripe(); // Initialize stripe
-  const elements = useElements(); // Initialize elements (though not strictly needed for redirectToCheckout)
+  const stripe = useStripe();
+  const elements = useElements();
   const [product, setProduct] = useState(null);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  useEffect(() => {
+    // Check if Stripe has loaded
+    if (!loading && !stripe) {
+      setError('Stripe n\'a pas pu être chargé. Veuillez vérifier votre clé d\'API REACT_APP_STRIPE_PUBLIC_KEY.');
+    }
+  }, [loading, stripe]);
 
   useEffect(() => {
     axios.get(`/api/products/${id}`)
@@ -31,8 +38,7 @@ const CheckoutPage = () => {
     setError(''); // Clear previous errors
 
     if (!stripe || !elements) {
-      // Stripe.js has not yet loaded.
-      // Make sure to disable form submission until Stripe.js has loaded.
+      setError('Le paiement via Stripe n\'est pas encore prêt. Veuillez patienter un instant.');
       return;
     }
 
@@ -78,7 +84,8 @@ const CheckoutPage = () => {
     return <div className="text-center p-10">Chargement...</div>;
   }
 
-  if (error) {
+  // Display a global error for the page if it's not a form-specific error
+  if (!product) {
     return <div className="text-center p-10 text-red-500">{error}</div>;
   }
 
