@@ -24,10 +24,6 @@ import ProductForm from './pages/admin/ProductForm';
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 function App() {
-  // --- Temporary Debugging ---
-  console.log("Clé publique Stripe chargée:", process.env.REACT_APP_STRIPE_PUBLIC_KEY);
-  // --- End of Temporary Debugging ---
-  
   return (
     <Elements stripe={stripePromise}>
       <Router>
