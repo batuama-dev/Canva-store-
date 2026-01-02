@@ -35,7 +35,7 @@ const createCheckoutSession = async (req, res) => {
       cancel_url: `${clientUrl}/checkout/${productId}`,
     });
 
-    res.json({ id: session.id });
+    res.json({ id: session.id, url: session.url });
   } catch (error) {
     console.error("Erreur lors de la création de la session de paiement Stripe:", error);
     res.status(500).json({ error: "Erreur lors de la création de la session de paiement." });

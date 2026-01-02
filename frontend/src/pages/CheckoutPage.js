@@ -62,20 +62,17 @@ const CheckoutPage = () => {
         // The success_url and cancel_url are now handled by the backend
       });
 
-      const { id: sessionId } = response.data;
-
-      // Redirect to Stripe Checkout
-      const result = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      });
-
-      if (result.error) {
-        setError(result.error.message);
+      // The new method: redirect to the URL from the session
+      if (response.data && response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('N\'a pas pu obtenir l\'URL de la session de paiement. Veuillez réessayer.');
         setIsProcessingPayment(false);
       }
     } catch (err) {
       console.error("Erreur lors de la création de la session Stripe:", err);
-      setError('Une erreur est survenue lors de la création de la session de paiement. Veuillez réessayer.');
+      const errorMessage = err.response?.data?.error || 'Une erreur est survenue lors de la création de la session de paiement. Veuillez réessayer.';
+      setError(errorMessage);
       setIsProcessingPayment(false);
     }
   };
