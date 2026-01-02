@@ -109,23 +109,32 @@ exports.verifyDownload = async (req, res) => {
   const { token } = req.params;
 
   try {
-    const { rows, rowCount } = await db.query('SELECT * FROM sales WHERE download_token = $1', [token]);
+    const query = `
+      SELECT s.download_expires, p.download_link
+      FROM sales s
+      JOIN products p ON s.product_id = p.id
+      WHERE s.download_token = $1
+    `;
+    const { rows, rowCount } = await db.query(query, [token]);
 
     if (rowCount === 0) {
       return res.status(404).json({ error: 'Lien de téléchargement non valide.' });
     }
 
-    const sale = rows[0];
+    const saleData = rows[0];
     const now = new Date();
-    const expires = new Date(sale.download_expires);
+    const expires = new Date(saleData.download_expires);
 
     if (now > expires) {
       return res.status(403).json({ error: 'Ce lien de téléchargement a expiré.' });
     }
+    
+    if (!saleData.download_link) {
+        return res.status(404).json({ error: 'Aucun fichier associé à ce produit.' });
+    }
 
-    // Here you would typically get the file path from the product
-    // and send the file. For now, we just confirm the link is valid.
-    res.json({ success: true, message: 'Le lien est valide.' });
+    // Send the actual download link
+    res.json({ success: true, download_link: saleData.download_link });
 
   } catch (error) {
     handleError(res, error);

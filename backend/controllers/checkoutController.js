@@ -1,7 +1,15 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const createCheckoutSession = async (req, res) => {
-  const { products, success_url, cancel_url } = req.body;
+  const { products } = req.body;
+  const productId = products[0]?.id; // Get the product ID from the first product
+
+  // Ensure CLIENT_URL is set, otherwise default for local development
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+
+  if (!productId) {
+    return res.status(400).json({ error: "ID de produit manquant." });
+  }
 
   try {
     const line_items = products.map(product => ({
@@ -23,8 +31,8 @@ const createCheckoutSession = async (req, res) => {
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      success_url: success_url,
-      cancel_url: cancel_url,
+      success_url: `${clientUrl}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${clientUrl}/checkout/${productId}`,
     });
 
     res.json({ id: session.id });

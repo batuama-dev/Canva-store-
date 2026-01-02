@@ -54,8 +54,7 @@ const CheckoutPage = () => {
           price: product.price,
           quantity: 1, // Assuming one product per checkout for now
         }],
-        success_url: window.location.origin + '/order-success?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: window.location.origin + '/checkout/' + id, // Redirect back to checkout on cancel
+        // The success_url and cancel_url are now handled by the backend
       });
 
       const { id: sessionId } = response.data;
@@ -132,10 +131,11 @@ const CheckoutPage = () => {
               />
               <p className="text-sm text-gray-500 mt-1">Le lien de téléchargement sera envoyé à cette adresse.</p>
             </div>
-
+            
+            <p className="text-sm text-gray-500 text-center mt-4">Paiement sécurisé par Stripe</p>
             <button 
               type="submit"
-              className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors mt-6 text-lg disabled:opacity-50"
+              className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors mt-2 text-lg disabled:opacity-50"
               disabled={!stripe || isProcessingPayment}
             >
               {isProcessingPayment ? 'Traitement du paiement...' : `Payer ${product.price}$`}

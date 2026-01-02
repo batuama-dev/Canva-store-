@@ -10,15 +10,21 @@ const Download = () => {
 
   useEffect(() => {
     if (token) {
-      axios.get(`/api/download/${token}`)
+      axios.get(`/api/sales/download/${token}`)
         .then(response => {
-          setMessage('Votre téléchargement devrait commencer automatiquement. Si ce n\'est pas le cas, veuillez cliquer ici.');
-          // Logic to actually trigger download will go here.
-          // For now, just a message.
+          if (response.data && response.data.download_link) {
+            setMessage('Téléchargement initié. Vous allez être redirigé...');
+            // Redirect to the actual download link to trigger the download
+            window.location.href = response.data.download_link;
+          } else {
+            setError(true);
+            setMessage('Le lien de téléchargement n\'a pas pu être récupéré.');
+          }
         })
         .catch(err => {
           setError(true);
-          setMessage('Lien de téléchargement invalide ou expiré.');
+          const errorMessage = err.response?.data?.error || 'Lien de téléchargement invalide ou expiré.';
+          setMessage(errorMessage);
         });
     } else {
       setError(true);
