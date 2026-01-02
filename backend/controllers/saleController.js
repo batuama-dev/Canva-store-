@@ -58,12 +58,31 @@ exports.confirmStripeSession = async (req, res) => {
 
     const customerEmail = session.customer_details.email;
     const customerName = session.customer_details.name || 'Client Stripe'; // Fallback name
-    const productLineItem = session.line_items.data[0]; 
-    if (!productLineItem || !productLineItem.price || !productLineItem.price.product || !productLineItem.price.product.metadata || !productLineItem.price.product.metadata.product_id) {
-      return res.status(400).json({ error: 'Détails du produit (ID) introuvables dans la session Stripe.' });
+    
+    if (!session.line_items || !session.line_items.data || session.line_items.data.length === 0) {
+      return res.status(400).json({ error: 'Données de l\'article (line_items) introuvables dans la session Stripe.' });
+    }
+    const productLineItem = session.line_items.data[0];
+
+    if (!productLineItem.price) {
+      return res.status(400).json({ error: 'Objet "price" manquant dans l\'article de la session.' });
+    }
+    if (!productLineItem.price.product) {
+      // Note: Stripe creates a product object when using price_data
+      // This is a sanity check.
+      return res.status(400).json({ error: 'Objet "product" manquant dans l\'objet "price" de la session.' });
     }
     
-    const productIdFromStripe = productLineItem.price.product.metadata.product_id;
+    // Let's now safely access the metadata. Stripe API v2022-11-15 and later may have changed this structure.
+    // Instead of directly creating a product, Stripe now encourages creating a price from a product.
+    // The metadata attached to product_data should be on the product object.
+    const stripeProduct = await stripe.products.retrieve(productLineItem.price.product);
+    
+    if (!stripeProduct.metadata || !stripeProduct.metadata.product_id) {
+      return res.status(400).json({ error: 'Métadonnées du produit ou "product_id" introuvables dans l\'objet Product de Stripe.' });
+    }
+    
+    const productIdFromStripe = stripeProduct.metadata.product_id;
     const productResult = await db.query('SELECT * FROM products WHERE id = $1', [productIdFromStripe]);
 
     if (productResult.rowCount === 0) {
