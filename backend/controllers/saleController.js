@@ -1,4 +1,3 @@
-// backend/controllers/saleController.js
 const db = require('../config/database');
 const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -96,7 +95,7 @@ exports.confirmStripeSession = async (req, res) => {
     const saleQuery = `
       INSERT INTO sales (product_id, customer_email, customer_name, amount, download_token, download_expires, stripe_session_id) 
       VALUES (, $2, $3, $4, $5, $6, $7)
-      RETURNING id;
+      RETURNING id
     `;
     await db.query(saleQuery, [
       product.id,
