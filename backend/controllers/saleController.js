@@ -47,6 +47,7 @@ exports.createSale = async (req, res) => {
 };
 
 exports.confirmStripeSession = async (req, res) => {
+  console.log('--- RUNNING LATEST CODE v3 ---'); // Diagnostic log
   const { sessionId } = req.body;
 
   try {
