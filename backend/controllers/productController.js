@@ -50,16 +50,28 @@ exports.getProductById = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
-  const { name, description, price, quantity, category } = req.body;
-  if (!req.file) {
-    return res.status(400).json({ error: 'Image du produit requise' });
+  const { name, description, price, quantity, category, product_links } = req.body;
+  
+  // With upload.fields, files are in req.files
+  const imageFile = req.files && req.files.image ? req.files.image[0] : null;
+  const pdfFile = req.files && req.files.pdfFile ? req.files.pdfFile[0] : null;
+
+  if (!imageFile) {
+    return res.status(400).json({ error: 'Image principale du produit requise.' });
   }
-  const image_url = req.file.path; // URL from Cloudinary
-  const query = 'INSERT INTO products (name, description, price, quantity, image_url, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id';
+
+  const image_url = imageFile.path; // URL from Cloudinary for the image
+  const file_url = pdfFile ? pdfFile.path : null; // URL from Cloudinary for the PDF
+
+  const query = `
+    INSERT INTO products (name, description, price, quantity, category, image_url, file_url, product_links) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+    RETURNING id
+  `;
   
   try {
-    const { rows } = await db.query(query, [name, description, price, quantity, image_url, category]);
-    res.status(201).json({ id: rows[0].id, ...req.body, image_url });
+    const { rows } = await db.query(query, [name, description, price, quantity, category, image_url, file_url, product_links]);
+    res.status(201).json({ id: rows[0].id, ...req.body, image_url, file_url, product_links });
   } catch (error) {
     handleError(res, error);
   }
@@ -67,21 +79,34 @@ exports.createProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, quantity, category } = req.body;
+  const { name, description, price, quantity, category, product_links } = req.body;
   
   try {
-    let query;
-    let queryParams;
+    const imageFile = req.files && req.files.image ? req.files.image[0] : null;
+    const pdfFile = req.files && req.files.pdfFile ? req.files.pdfFile[0] : null;
 
-    if (req.file) {
-      const image_url = req.file.path; // URL from Cloudinary
-      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, image_url = $5, category = $6 WHERE id = $7';
-      queryParams = [name, description, price, quantity, image_url, category, id];
-    } else {
-      query = 'UPDATE products SET name = $1, description = $2, price = $3, quantity = $4, category = $5 WHERE id = $6';
-      queryParams = [name, description, price, quantity, category, id];
+    let updateFields = [
+      { name: 'name', value: name },
+      { name: 'description', value: description },
+      { name: 'price', value: price },
+      { name: 'quantity', value: quantity },
+      { name: 'category', value: category },
+      { name: 'product_links', value: product_links }
+    ];
+
+    if (imageFile) {
+      updateFields.push({ name: 'image_url', value: imageFile.path });
+    }
+    if (pdfFile) {
+      updateFields.push({ name: 'file_url', value: pdfFile.path });
     }
 
+    const setClause = updateFields.map((field, index) => `${field.name} = $${index + 1}`).join(', ');
+    const queryParams = updateFields.map(field => field.value);
+    queryParams.push(id); // Add the id for the WHERE clause
+
+    const query = `UPDATE products SET ${setClause} WHERE id = $${queryParams.length}`;
+    
     const result = await db.query(query, queryParams);
     
     if (result.rowCount === 0) {

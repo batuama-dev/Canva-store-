@@ -78,16 +78,21 @@ exports.confirmStripeSession = async (req, res) => {
     }
     
     const productIdFromStripe = stripeProduct.metadata.product_id;
-    const productResult = await db.query('SELECT id, name, price, file_url FROM products WHERE id = $1', [productIdFromStripe]);
+    // --- ÉTAPE 1: Récupérer le produit avec les deux types de liens ---
+    const productResult = await db.query('SELECT id, name, price, file_url, product_links FROM products WHERE id = $1', [productIdFromStripe]);
 
     if (productResult.rowCount === 0) {
       return res.status(404).json({ error: `Produit avec l'ID "${productIdFromStripe}" non trouvé dans la base de données.` });
     }
     const product = productResult.rows[0];
 
-    if (!product.file_url) {
-      console.error(`Produit ${product.id} acheté sans lien de téléchargement (file_url).`);
-      return res.status(500).json({ error: 'Le fichier de ce produit est manquant. Veuillez contacter le support.' });
+    // --- ÉTAPE 2: Valider que les liens nécessaires existent ---
+    if (!product.file_url || !product.product_links) {
+      const missing = [];
+      if (!product.file_url) missing.push('le fichier PDF');
+      if (!product.product_links) missing.push('la liste des liens pour l\'e-mail');
+      console.error(`Produit ${product.id} acheté mais configuration incomplète. Manquant : ${missing.join(' et ')}.`);
+      return res.status(500).json({ error: 'La configuration de ce produit est incomplète. Veuillez contacter le support.' });
     }
 
     const downloadToken = crypto.randomBytes(32).toString('hex');
@@ -108,27 +113,40 @@ exports.confirmStripeSession = async (req, res) => {
       sessionId
     ]);
 
-    // --- Envoi de l'e-mail de confirmation ---
+    // --- ÉTAPE 3: Construire et envoyer l'e-mail professionnel ---
+    const linksList = product.product_links
+      .split('\n')
+      .map(link => link.trim())
+      .filter(link => link.length > 0)
+      .map(link => `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></li>`)
+      .join('');
+
+    const emailHtml = `
+      <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+        <h2>Bonjour ${customerName},</h2>
+        <p>Nous vous remercions pour votre confiance et votre achat sur Templyfast.</p>
+        
+        <h3>Vos liens d'accès aux templates :</h3>
+        <p>Voici les liens directs pour accéder à vos templates Canva. Cliquez sur chacun d'eux pour commencer à créer :</p>
+        <ul>
+          ${linksList}
+        </ul>
+        
+        <h3>Téléchargement alternatif :</h3>
+        <p>Pour votre commodité, un fichier PDF contenant ces mêmes liens est également disponible au téléchargement immédiat sur la page de confirmation de votre commande.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+        
+        <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
+        <p>Cordialement,<br>L'équipe de Templyfast</p>
+      </div>
+    `;
+
     const emailMsg = {
       to: customerEmail,
       from: 'templyfast@gmail.com', // Adresse vérifiée sur SendGrid
-      subject: 'Merci pour votre achat chez Templyfast !',
-      html: `
-        <div style="font-family: sans-serif; line-height: 1.6;">
-          <h2>Bonjour ${customerName},</h2>
-          <p>Nous vous remercions pour votre confiance et votre achat sur Templyfast.</p>
-          <p>Vous pouvez télécharger votre produit en cliquant sur le lien ci-dessous :</p>
-          <p style="text-align: center;">
-            <a href="${product.file_url}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-              Télécharger mon template
-            </a>
-          </p>
-          <p>Ce lien est valide pendant 7 jours.</p>
-          <hr/>
-          <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
-          <p>Cordialement,<br>L'équipe de Templyfast</p>
-        </div>
-      `,
+      subject: `Accès à votre achat Templyfast : ${product.name}`,
+      html: emailHtml,
     };
 
     try {
@@ -139,10 +157,10 @@ exports.confirmStripeSession = async (req, res) => {
     }
     // --- Fin de l'envoi d'e-mail ---
 
-    // Répondre avec le lien de téléchargement direct
+    // --- ÉTAPE 4: Répondre avec le lien de téléchargement du PDF ---
     res.json({
       success: true,
-      download_url: product.file_url, // URL de téléchargement directe
+      download_url: product.file_url, // URL de téléchargement directe du PDF
       message: 'Paiement confirmé et achat enregistré avec succès!'
     });
 

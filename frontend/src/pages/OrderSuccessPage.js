@@ -68,7 +68,7 @@ const OrderSuccessPage = () => {
             <svg className="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Merci pour votre achat !</h1>
             <p className="text-gray-600 mb-6">
-              Votre paiement a été traité avec succès. Vous recevrez également un e-mail de confirmation contenant le lien de téléchargement.
+              Votre paiement a été traité avec succès. Un e-mail de confirmation contenant tous les liens d'accès vous a été envoyé.
             </p>
             {downloadUrl ? (
               <a
@@ -77,11 +77,11 @@ const OrderSuccessPage = () => {
                 rel="noopener noreferrer"
                 className="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Télécharger mon template
+                Télécharger le Fichier PDF
               </a>
             ) : (
               <p className="text-red-500">
-                Lien de téléchargement en attente. Veuillez vérifier vos e-mails ou contacter le support.
+                Lien de téléchargement non disponible. Veuillez vérifier vos e-mails ou contacter le support.
               </p>
             )}
           </>

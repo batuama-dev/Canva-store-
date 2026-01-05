@@ -37,7 +37,7 @@ const ProductForm = () => {
   const [galleryFiles, setGalleryFiles] = useState([]);
   const [galleryPreviewUrls, setGalleryPreviewUrls] = useState([]);
 
-  // const [downloadFile, setDownloadFile] = useState(null);
+  const [downloadFile, setDownloadFile] = useState(null);
   const [downloadFileName, setDownloadFileName] = useState('');
 
 
@@ -165,10 +165,10 @@ const ProductForm = () => {
   const handleDownloadFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // setDownloadFile(file);
+      setDownloadFile(file);
       setDownloadFileName(file.name);
     } else {
-      // setDownloadFile(null);
+      setDownloadFile(null);
       setDownloadFileName(isEditing && product.download_file_url ? product.download_file_url.split('/').pop() : '');
     }
   };
@@ -202,17 +202,24 @@ const ProductForm = () => {
 
     const formData = new FormData();
 
-    // Append only the data the backend controller expects
+    // Append text data
     formData.append('name', product.name);
     formData.append('description', product.description);
     formData.append('price', product.price);
-    formData.append('category', product.category); // Ensure category is sent
-    // Assuming 'quantity' is required by the backend but not in the form, let's add a default
-    formData.append('quantity', product.quantity || 1); 
+    formData.append('category', product.category);
+    formData.append('quantity', product.quantity || 1);
+    
+    // Append Canva links as a newline-separated string to match backend expectation
+    formData.append('product_links', product.canva_links.join('\n'));
 
-    // Append the main preview file with the correct key 'image'
+    // Append file for the main image
     if (mainPreviewFile) {
       formData.append('image', mainPreviewFile);
+    }
+    
+    // Append file for the PDF download
+    if (downloadFile) {
+        formData.append('pdfFile', downloadFile);
     }
 
     try {
@@ -312,7 +319,7 @@ const ProductForm = () => {
             </FormSection>
 
             {/* Download File Section */}
-            <FormSection title="Fichier à Télécharger (Optionnel)">
+            <FormSection title="Fichier PDF à Télécharger">
                 <DownloadFileUploadField fileName={downloadFileName} onFileChange={handleDownloadFileChange} />
             </FormSection>
 
@@ -400,8 +407,8 @@ const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) =>
 const DownloadFileUploadField = ({ fileName, onFileChange }) => (
     <div className="flex items-center gap-4">
         <div className="flex-1">
-            <label htmlFor="download_file" className="sr-only">Fichier ZIP</label>
-            <input id="download_file" name="download_file" type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onChange={onFileChange} accept=".zip" />
+            <label htmlFor="download_file" className="sr-only">Fichier PDF</label>
+            <input id="download_file" name="download_file" type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onChange={onFileChange} accept=".pdf" />
         </div>
         {fileName && (
             <div className="flex items-center gap-2">
