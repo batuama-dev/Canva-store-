@@ -78,15 +78,15 @@ exports.confirmStripeSession = async (req, res) => {
     }
     
     const productIdFromStripe = stripeProduct.metadata.product_id;
-    const productResult = await db.query('SELECT id, name, price, download_link FROM products WHERE id = $1', [productIdFromStripe]);
+    const productResult = await db.query('SELECT id, name, price, file_url FROM products WHERE id = $1', [productIdFromStripe]);
 
     if (productResult.rowCount === 0) {
       return res.status(404).json({ error: `Produit avec l'ID "${productIdFromStripe}" non trouvé dans la base de données.` });
     }
     const product = productResult.rows[0];
 
-    if (!product.download_link) {
-      console.error(`Produit ${product.id} acheté sans lien de téléchargement (download_link).`);
+    if (!product.file_url) {
+      console.error(`Produit ${product.id} acheté sans lien de téléchargement (file_url).`);
       return res.status(500).json({ error: 'Le fichier de ce produit est manquant. Veuillez contacter le support.' });
     }
 
@@ -119,7 +119,7 @@ exports.confirmStripeSession = async (req, res) => {
           <p>Nous vous remercions pour votre confiance et votre achat sur Templyfast.</p>
           <p>Vous pouvez télécharger votre produit en cliquant sur le lien ci-dessous :</p>
           <p style="text-align: center;">
-            <a href="${product.download_link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            <a href="${product.file_url}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
               Télécharger mon template
             </a>
           </p>
@@ -142,7 +142,7 @@ exports.confirmStripeSession = async (req, res) => {
     // Répondre avec le lien de téléchargement direct
     res.json({
       success: true,
-      download_url: product.download_link, // URL de téléchargement directe
+      download_url: product.file_url, // URL de téléchargement directe
       message: 'Paiement confirmé et achat enregistré avec succès!'
     });
 
@@ -157,7 +157,7 @@ exports.verifyDownload = async (req, res) => {
 
   try {
     const query = `
-      SELECT s.download_expires, p.download_link
+      SELECT s.download_expires, p.file_url
       FROM sales s
       JOIN products p ON s.product_id = p.id
       WHERE s.download_token = $1
@@ -176,12 +176,12 @@ exports.verifyDownload = async (req, res) => {
       return res.status(403).json({ error: 'Ce lien de téléchargement a expiré.' });
     }
     
-    if (!saleData.download_link) {
+    if (!saleData.file_url) {
         return res.status(404).json({ error: 'Aucun fichier associé à ce produit.' });
     }
 
     // Send the actual download link
-    res.json({ success: true, download_link: saleData.download_link });
+    res.json({ success: true, download_url: saleData.file_url });
 
   } catch (error) {
     handleError(res, error);
