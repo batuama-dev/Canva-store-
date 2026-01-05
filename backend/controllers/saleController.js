@@ -16,7 +16,7 @@ exports.createSale = async (req, res) => {
   
   try {
     // 1. Récupérer le produit
-    const productResult = await db.query('SELECT * FROM products WHERE id = ', [product_id]);
+    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [product_id]);
     
     if (productResult.rowCount === 0) {
       return res.status(404).json({ error: 'Product not found' });
@@ -29,7 +29,7 @@ exports.createSale = async (req, res) => {
     // 2. Créer la vente
     const saleQuery = `
       INSERT INTO sales (product_id, customer_email, customer_name, amount, download_token, download_expires) 
-      VALUES (, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6)
     `;
     await db.query(saleQuery, [product_id, customer_email, customer_name, product.price, downloadToken, expires]);
 
@@ -78,7 +78,7 @@ exports.confirmStripeSession = async (req, res) => {
     }
     
     const productIdFromStripe = stripeProduct.metadata.product_id;
-    const productResult = await db.query('SELECT id, name, price, download_link FROM products WHERE id = ', [productIdFromStripe]);
+    const productResult = await db.query('SELECT id, name, price, download_link FROM products WHERE id = $1', [productIdFromStripe]);
 
     if (productResult.rowCount === 0) {
       return res.status(404).json({ error: `Produit avec l'ID "${productIdFromStripe}" non trouvé dans la base de données.` });
@@ -95,7 +95,7 @@ exports.confirmStripeSession = async (req, res) => {
 
     const saleQuery = `
       INSERT INTO sales (product_id, customer_email, customer_name, amount, download_token, download_expires, stripe_session_id) 
-      VALUES (, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `;
     await db.query(saleQuery, [
@@ -160,7 +160,7 @@ exports.verifyDownload = async (req, res) => {
       SELECT s.download_expires, p.download_link
       FROM sales s
       JOIN products p ON s.product_id = p.id
-      WHERE s.download_token = 
+      WHERE s.download_token = $1
     `;
     const { rows, rowCount } = await db.query(query, [token]);
 
