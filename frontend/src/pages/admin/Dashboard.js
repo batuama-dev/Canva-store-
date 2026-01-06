@@ -11,24 +11,35 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error state on new fetch
+        console.log('Fetching admin data...');
+
         const [statsRes, salesRes] = await Promise.all([
           axios.get('/api/admin/stats'),
           axios.get('/api/admin/recent-sales')
         ]);
-        setStats(statsRes.data);
-        setRecentSales(salesRes.data);
+
+        console.log('Stats response:', statsRes.data);
+        console.log('Recent sales response:', salesRes.data);
+
+        // Ensure data is an array before setting state
+        setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
+        setRecentSales(Array.isArray(salesRes.data) ? salesRes.data : []);
+
       } catch (err) {
-        setError('Impossible de charger les données du tableau de bord. Le serveur backend est-il en cours d\'exécution ?');
-        console.error(err);
+        console.error('Error fetching dashboard data:', err.response || err);
+        setError('Impossible de charger les données du tableau de bord. Vérifiez la console pour plus de détails.');
       } finally {
         setLoading(false);
+        console.log('Finished fetching admin data.');
       }
     };
     fetchData();
   }, []);
 
-  const totalRevenue = stats.reduce((acc, item) => acc + (item.total_revenue || 0), 0);
-  const totalSales = stats.reduce((acc, item) => acc + Number(item.sales_count || 0), 0);
+  // Ensure stats is an array before reducing
+  const totalRevenue = Array.isArray(stats) ? stats.reduce((acc, item) => acc + (item.total_revenue || 0), 0) : 0;
+  const totalSales = Array.isArray(stats) ? stats.reduce((acc, item) => acc + Number(item.sales_count || 0), 0) : 0;
 
   if (loading) {
     return <div>Chargement du tableau de bord...</div>;
@@ -36,6 +47,11 @@ const Dashboard = () => {
 
   if (error) {
     return <div className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</div>;
+  }
+
+  // Final check to prevent render errors if data is still not as expected
+  if (!Array.isArray(stats) || !Array.isArray(recentSales)) {
+    return <div className="text-orange-500 bg-orange-100 p-4 rounded-lg">Les données reçues ne sont pas dans le format attendu.</div>;
   }
 
   return (
