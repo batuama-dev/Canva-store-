@@ -6,8 +6,25 @@ require('dotenv').config();
 
 const app = express();
 
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000'];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origine (comme Postman, cURL) ou celles qui sont dans la liste blanche
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
