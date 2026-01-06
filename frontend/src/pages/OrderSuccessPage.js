@@ -14,17 +14,22 @@ const OrderSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Function to transform Cloudinary URL to force download
-  const getForceDownloadUrl = (url) => {
-    if (!url.includes('res.cloudinary.com')) {
-      return url; // Return original URL if it's not from Cloudinary
+  // Function to transform Cloudinary URL to force download with a specific filename
+  const getForceDownloadUrl = (url, filename) => {
+    if (!url || !url.includes('res.cloudinary.com')) {
+      return url; // Return original URL if it's not a valid Cloudinary URL
     }
+    
+    // Create a URL-safe version of the filename
+    const safeFilename = filename.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
+
     const parts = url.split('/upload/');
     if (parts.length !== 2) {
       return url; // Return original if format is unexpected
     }
-    // Insert fl_attachment flag for force download
-    return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+    
+    // Insert fl_attachment:filename flag
+    return `${parts[0]}/upload/fl_attachment:${safeFilename}/${parts[1]}`;
   };
 
   useEffect(() => {
@@ -39,10 +44,12 @@ const OrderSuccessPage = () => {
         // Call backend to confirm the Stripe session and get download URL
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
         if (response.data && response.data.download_url) {
-          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url);
+          const productName = response.data.product_name || 'pack-templyfast';
+          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url, productName);
+          
           setDownloadInfo({
             url: forceDownloadUrl,
-            name: response.data.product_name || 'pack-templyfast'
+            name: productName
           });
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
@@ -90,11 +97,10 @@ const OrderSuccessPage = () => {
             {downloadInfo ? (
               <a
                 href={downloadInfo.url}
-                download={downloadInfo.name}
                 rel="noopener noreferrer"
                 className="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Télécharger le Fichier PDF
+                Télécharger le Fichier
               </a>
             ) : (
               <p className="text-red-500">
