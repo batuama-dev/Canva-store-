@@ -371,7 +371,7 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
             )}
         </div>
     </div>
-)};
+);
 
 const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
     <div>
@@ -391,7 +391,7 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
             </label>
         </div>
     </div>
-)};
+);
 
 const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) => (
     <div className="flex items-center gap-2 mb-2">
@@ -417,6 +417,6 @@ const DownloadFileUploadField = ({ fileName, onFileChange }) => (
             </div>
         )}
     </div>
-)};
+);
 
 export default ProductForm;
