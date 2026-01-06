@@ -10,7 +10,7 @@ function useQuery() {
 const OrderSuccessPage = () => {
   const query = useQuery();
   const sessionId = query.get('session_id');
-  const [downloadUrl, setDownloadUrl] = useState(null);
+  const [downloadInfo, setDownloadInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,7 +26,10 @@ const OrderSuccessPage = () => {
         // Call backend to confirm the Stripe session and get download URL
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
         if (response.data && response.data.download_url) {
-          setDownloadUrl(response.data.download_url);
+          setDownloadInfo({
+            url: response.data.download_url,
+            name: response.data.product_name || 'pack-templyfast.pdf' // Fallback filename
+          });
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
         }
@@ -70,10 +73,10 @@ const OrderSuccessPage = () => {
             <p className="text-gray-600 mb-6">
               Votre paiement a été traité avec succès. Un e-mail de confirmation contenant tous les liens d'accès vous a été envoyé.
             </p>
-            {downloadUrl ? (
+            {downloadInfo ? (
               <a
-                href={downloadUrl}
-                target="_blank"
+                href={downloadInfo.url}
+                download={downloadInfo.name}
                 rel="noopener noreferrer"
                 className="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"
               >

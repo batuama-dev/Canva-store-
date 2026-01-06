@@ -161,6 +161,7 @@ exports.confirmStripeSession = async (req, res) => {
     res.json({
       success: true,
       download_url: product.file_url, // URL de téléchargement directe du PDF
+      product_name: product.name, // Ajouter le nom du produit
       message: 'Paiement confirmé et achat enregistré avec succès!'
     });
 
