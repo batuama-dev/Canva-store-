@@ -11,23 +11,22 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
-    // Common logic for public_id
-    const originalName = file.originalname.split('.').slice(0, -1).join('.');
-    const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
-    const public_id = `${sanitizedName}_${Date.now()}`;
     const folder = 'canva-store';
 
-    // For PDF files, upload as a raw file without format conversion
+    // For PDF files, upload as a raw file and let Cloudinary generate the public_id
+    // This ensures the file extension is correctly preserved.
     if (file.fieldname === 'pdfFile') {
       return {
         folder: folder,
-        public_id: public_id,
         resource_type: 'raw',
-        // By not specifying `format`, we preserve the original format (pdf)
       };
     }
 
-    // For image files, process them as images and convert to jpg
+    // For image files, generate a custom public_id and convert to jpg
+    const originalName = file.originalname.split('.').slice(0, -1).join('.');
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
+    const public_id = `${sanitizedName}_${Date.now()}`;
+
     return {
       folder: folder,
       public_id: public_id,
