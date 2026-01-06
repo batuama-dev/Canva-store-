@@ -12,7 +12,6 @@ const generateSlug = (name) => {
 };
 */
 const ProductForm = () => {
-  console.log('ProductForm: Component rendered or re-rendered.');
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
@@ -124,8 +123,6 @@ const ProductForm = () => {
   };
 
   const handleMainPreviewChange = (e) => {
-    console.log('handleMainPreviewChange: Fired.');
-    console.log('handleMainPreviewChange: Selected files:', e.target.files);
     const file = e.target.files[0];
     if (file) {
       setMainPreviewFile(file);
@@ -138,8 +135,6 @@ const ProductForm = () => {
   };
 
   const handleGalleryFilesChange = (e) => {
-    console.log('handleGalleryFilesChange: Fired.');
-    console.log('handleGalleryFilesChange: Selected files:', e.target.files);
     const files = Array.from(e.target.files);
     if (files.length > 0) {
         setGalleryFiles(prevFiles => [...prevFiles, ...files]);
@@ -168,8 +163,6 @@ const ProductForm = () => {
 
 
   const handleDownloadFileChange = (e) => {
-    console.log('handleDownloadFileChange: Fired.');
-    console.log('handleDownloadFileChange: Selected files:', e.target.files);
     const file = e.target.files[0];
     if (file) {
       setDownloadFile(file);
@@ -361,9 +354,7 @@ const InputField = ({ label, name, value, onChange, type = 'text', placeholder =
     </div>
 );
 
-const ImageUploadPreview = ({ previewUrl, onFileChange }) => {
-    console.log('ImageUploadPreview: Rendered.');
-    return (
+const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
     <div className="flex items-center gap-4">
         {previewUrl ? (
             <img src={previewUrl} alt="Aperçu" className="w-32 h-32 rounded-lg object-cover shadow-md"/>
@@ -371,9 +362,9 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => {
             <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
         )}
         <div>
-            <label htmlFor="main_preview_file" className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <label htmlFor="main_preview_file" className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <span>{previewUrl ? 'Changer l\'image' : 'Sélectionner une image'}</span>
-                <input id="main_preview_file" name="main_preview_file" type="file" className="absolute inset-0 z-50 opacity-0 cursor-pointer" onChange={onFileChange} accept="image/png, image/jpeg, image/webp" />
+                <input id="main_preview_file" name="main_preview_file" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={onFileChange} accept="image/png, image/jpeg, image/webp" />
             </label>
              {previewUrl && (
                 <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="ml-2 text-sm text-red-600 hover:text-red-800">Supprimer</button>
@@ -382,9 +373,7 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => {
     </div>
 )};
 
-const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => {
-    console.log('GalleryUploadGrid: Rendered.');
-    return (
+const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
     <div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {previews.map((url, index) => (
@@ -395,10 +384,10 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => {
                     </button>
                 </div>
             ))}
-            <label htmlFor="gallery_files" className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+            <label htmlFor="gallery_files" className="relative w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
                 <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span className="mt-2 block text-sm font-medium text-gray-600">Ajouter</span>
-                <input id="gallery_files" name="gallery_files" type="file" className="absolute inset-0 z-50 opacity-0 cursor-pointer" onChange={onFilesChange} accept="image/png, image/jpeg, image/webp" multiple />
+                <input id="gallery_files" name="gallery_files" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={onFilesChange} accept="image/png, image/jpeg, image/webp" multiple />
             </label>
         </div>
     </div>
@@ -415,15 +404,11 @@ const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) =>
     </div>
 );
 
-const DownloadFileUploadField = ({ fileName, onFileChange }) => {
-    console.log('DownloadFileUploadField: Rendered.');
-    return (
+const DownloadFileUploadField = ({ fileName, onFileChange }) => (
     <div className="flex items-center gap-4">
         <div className="flex-1">
-            <label htmlFor="download_file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 relative">
-                Fichier PDF
-                <input id="download_file" name="download_file" type="file" className="absolute inset-0 z-50 opacity-0 cursor-pointer" onChange={onFileChange} accept=".pdf" />
-            </label>
+            <label htmlFor="download_file" className="sr-only">Fichier PDF</label>
+            <input id="download_file" name="download_file" type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onChange={onFileChange} accept=".pdf" />
         </div>
         {fileName && (
             <div className="flex items-center gap-2">
