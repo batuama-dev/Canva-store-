@@ -20,16 +20,17 @@ const OrderSuccessPage = () => {
       return url; // Return original URL if it's not a valid Cloudinary URL
     }
     
-    // Create a URL-safe version of the filename
+    // Create a URL-safe version of the filename, and ensure it has a .pdf extension
     const safeFilename = filename.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
+    const finalFilename = safeFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
 
     const parts = url.split('/upload/');
     if (parts.length !== 2) {
       return url; // Return original if format is unexpected
     }
     
-    // Insert fl_attachment:filename flag
-    return `${parts[0]}/upload/fl_attachment:${safeFilename}/${parts[1]}`;
+    // Insert fl_attachment:filename.pdf flag
+    return `${parts[0]}/upload/fl_attachment:${finalFilename}/${parts[1]}`;
   };
 
   useEffect(() => {
