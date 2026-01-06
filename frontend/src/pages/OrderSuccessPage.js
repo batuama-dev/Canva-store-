@@ -14,6 +14,19 @@ const OrderSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Function to transform Cloudinary URL to force download
+  const getForceDownloadUrl = (url) => {
+    if (!url.includes('res.cloudinary.com')) {
+      return url; // Return original URL if it's not from Cloudinary
+    }
+    const parts = url.split('/upload/');
+    if (parts.length !== 2) {
+      return url; // Return original if format is unexpected
+    }
+    // Insert fl_attachment flag for force download
+    return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+  };
+
   useEffect(() => {
     const confirmPayment = async () => {
       if (!sessionId) {
@@ -26,9 +39,10 @@ const OrderSuccessPage = () => {
         // Call backend to confirm the Stripe session and get download URL
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
         if (response.data && response.data.download_url) {
+          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url);
           setDownloadInfo({
-            url: response.data.download_url,
-            name: response.data.product_name || 'pack-templyfast.pdf' // Fallback filename
+            url: forceDownloadUrl,
+            name: response.data.product_name || 'pack-templyfast'
           });
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
