@@ -37,9 +37,9 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // Ensure stats is an array before reducing
-  const totalRevenue = Array.isArray(stats) ? stats.reduce((acc, item) => acc + (item.total_revenue || 0), 0) : 0;
-  const totalSales = Array.isArray(stats) ? stats.reduce((acc, item) => acc + Number(item.sales_count || 0), 0) : 0;
+  // Ensure stats is an array before reducing. Use parseFloat to prevent string concatenation.
+  const totalRevenue = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseFloat(item.total_revenue || 0), 0) : 0;
+  const totalSales = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseInt(item.sales_count || 0, 10), 0) : 0;
 
   if (loading) {
     return <div>Chargement du tableau de bord...</div>;
