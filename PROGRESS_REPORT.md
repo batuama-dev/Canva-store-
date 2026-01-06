@@ -229,3 +229,30 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
 1.  **Mise à jour du Schéma :**
     *   Ajouter la colonne `stripe_session_id` (`VARCHAR(255) UNIQUE`) à la table `sales` pour stocker l'ID de session Stripe. **(Fichier de migration créé et exécuté par l'utilisateur)**
     *   Le contrôleur `saleController.js` a été mis à jour pour enregistrer cet ID lors de la confirmation de session.
+---
+
+## 9. Mises à Jour du 6 Janvier 2026
+
+### 9.1. Flexibilité du Frontend et Déploiement de Secours
+
+*   **Contexte :** Suite à l'atteinte des limites mensuelles sur Netlify, un besoin de flexibilité pour le déploiement du frontend est apparu.
+*   **Objectif :** Configurer le backend pour accepter plusieurs frontends et déployer une version de secours sur Vercel.
+
+*   **Actions réalisées :**
+    1.  **Mise à jour de la configuration CORS du Backend :**
+        *   Le fichier `backend/server.js` a été modifié pour rendre la politique CORS (Cross-Origin Resource Sharing) dynamique.
+        *   Au lieu d'autoriser toutes les origines, le backend utilise maintenant une liste blanche (allowlist) basée sur une nouvelle variable d'environnement `ALLOWED_ORIGINS`. Cette variable contient une liste d'URLs de frontend autorisées (ex: `https://site-netlify.app,https://site-vercel.app`).
+    2.  **Déploiement du Frontend sur Vercel :**
+        *   Le frontend React a été déployé avec succès sur Vercel, servant d'alternative à Netlify.
+        *   La configuration sur Vercel a été ajustée pour cibler le sous-dossier `frontend` du monorepo.
+
+*   **Résultat :** Le backend peut maintenant communiquer de manière sécurisée avec plusieurs frontends. L'application est accessible via l'URL de Netlify et celle de Vercel. ✅
+
+### 9.2. Correction du Bug d'Authentification de l'Interface d'Administration
+
+*   **Problème :** Après la connexion, l'interface d'administration devenait instable et la page se "volatilisait", rendant l'accès impossible.
+*   **Analyse :** La cause racine était que le client frontend (`axios`) n'envoyait pas les informations d'authentification (cookies de session) au backend lors des requêtes API post-connexion. Le backend rejetait donc ces requêtes comme non authentifiées, provoquant l'instabilité.
+*   **Solution :**
+    *   Le fichier de configuration d'axios (`frontend/src/api/axios.js`) a été mis à jour pour inclure l'option `withCredentials: true`.
+    *   Ce changement force `axios` à envoyer les cookies avec chaque requête, permettant au backend d'identifier et d'authentifier correctement la session de l'utilisateur.
+*   **Résultat :** L'interface d'administration est maintenant stable et pleinement fonctionnelle après la connexion. ✅
