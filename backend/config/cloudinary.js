@@ -10,16 +10,29 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'canva-store',
-    format: async (req, file) => 'jpg', // supports promises as well
-    public_id: (req, file) => {
-      // Remove file extension from the original name
-      const originalName = file.originalname.split('.').slice(0, -1).join('.');
-      // Sanitize the name and append a timestamp
-      const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
-      return `${sanitizedName}_${Date.now()}`;
-    },
+  params: (req, file) => {
+    // Common logic for public_id
+    const originalName = file.originalname.split('.').slice(0, -1).join('.');
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
+    const public_id = `${sanitizedName}_${Date.now()}`;
+    const folder = 'canva-store';
+
+    // For PDF files, upload as a raw file without format conversion
+    if (file.fieldname === 'pdfFile') {
+      return {
+        folder: folder,
+        public_id: public_id,
+        resource_type: 'raw',
+        // By not specifying `format`, we preserve the original format (pdf)
+      };
+    }
+
+    // For image files, process them as images and convert to jpg
+    return {
+      folder: folder,
+      public_id: public_id,
+      format: 'jpg',
+    };
   },
 });
 
