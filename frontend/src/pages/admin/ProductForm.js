@@ -12,6 +12,7 @@ const generateSlug = (name) => {
 };
 */
 const ProductForm = () => {
+  console.log('ProductForm: Component rendered or re-rendered.');
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
@@ -123,6 +124,8 @@ const ProductForm = () => {
   };
 
   const handleMainPreviewChange = (e) => {
+    console.log('handleMainPreviewChange: Fired.');
+    console.log('handleMainPreviewChange: Selected files:', e.target.files);
     const file = e.target.files[0];
     if (file) {
       setMainPreviewFile(file);
@@ -135,6 +138,8 @@ const ProductForm = () => {
   };
 
   const handleGalleryFilesChange = (e) => {
+    console.log('handleGalleryFilesChange: Fired.');
+    console.log('handleGalleryFilesChange: Selected files:', e.target.files);
     const files = Array.from(e.target.files);
     if (files.length > 0) {
         setGalleryFiles(prevFiles => [...prevFiles, ...files]);
@@ -163,6 +168,8 @@ const ProductForm = () => {
 
 
   const handleDownloadFileChange = (e) => {
+    console.log('handleDownloadFileChange: Fired.');
+    console.log('handleDownloadFileChange: Selected files:', e.target.files);
     const file = e.target.files[0];
     if (file) {
       setDownloadFile(file);
@@ -354,7 +361,9 @@ const InputField = ({ label, name, value, onChange, type = 'text', placeholder =
     </div>
 );
 
-const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
+const ImageUploadPreview = ({ previewUrl, onFileChange }) => {
+    console.log('ImageUploadPreview: Rendered.');
+    return (
     <div className="flex items-center gap-4">
         {previewUrl ? (
             <img src={previewUrl} alt="Aperçu" className="w-32 h-32 rounded-lg object-cover shadow-md"/>
@@ -371,9 +380,11 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
             )}
         </div>
     </div>
-);
+)};
 
-const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
+const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => {
+    console.log('GalleryUploadGrid: Rendered.');
+    return (
     <div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {previews.map((url, index) => (
@@ -391,7 +402,7 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
             </label>
         </div>
     </div>
-);
+)};
 
 const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) => (
     <div className="flex items-center gap-2 mb-2">
@@ -404,7 +415,9 @@ const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) =>
     </div>
 );
 
-const DownloadFileUploadField = ({ fileName, onFileChange }) => (
+const DownloadFileUploadField = ({ fileName, onFileChange }) => {
+    console.log('DownloadFileUploadField: Rendered.');
+    return (
     <div className="flex items-center gap-4">
         <div className="flex-1">
             <label htmlFor="download_file" className="sr-only">Fichier PDF</label>
@@ -417,6 +430,6 @@ const DownloadFileUploadField = ({ fileName, onFileChange }) => (
             </div>
         )}
     </div>
-);
+)};
 
 export default ProductForm;

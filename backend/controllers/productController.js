@@ -50,6 +50,9 @@ exports.getProductById = async (req, res) => {
 };
 
 exports.createProduct = async (req, res) => {
+  console.log('createProduct: Received request.');
+  console.log('createProduct: Body:', req.body);
+  console.log('createProduct: Files:', req.files);
   const { name, description, price, quantity, category, product_links } = req.body;
   
   // With upload.fields, files are in req.files
@@ -78,6 +81,9 @@ exports.createProduct = async (req, res) => {
 };
 
 exports.updateProduct = async (req, res) => {
+  console.log('updateProduct: Received request.');
+  console.log('updateProduct: Body:', req.body);
+  console.log('updateProduct: Files:', req.files);
   const { id } = req.params;
   const { name, description, price, quantity, category, product_links } = req.body;
   
@@ -133,6 +139,8 @@ exports.deleteProduct = async (req, res) => {
 };
 
 exports.uploadProductImages = async (req, res) => {
+    console.log('uploadProductImages: Received request.');
+    console.log('uploadProductImages: Files:', req.files);
     const { id: productId } = req.params;
     const files = req.files;
 
