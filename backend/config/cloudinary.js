@@ -16,9 +16,12 @@ const storage = new CloudinaryStorage({
     // For PDF files, upload as a raw file and let Cloudinary generate the public_id
     // This ensures the file extension is correctly preserved.
     if (file.fieldname === 'pdfFile') {
+      const originalName = file.originalname.split('.').slice(0, -1).join('.');
       return {
         folder: folder,
         resource_type: 'raw',
+        public_id: originalName, // Use original name to preserve extension
+        transformation: [{ flags: 'attachment' }] // Add attachment flag
       };
     }
 

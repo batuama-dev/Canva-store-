@@ -157,6 +157,12 @@ exports.confirmStripeSession = async (req, res) => {
     }
     // --- Fin de l'envoi d'e-mail ---
 
+    // --- LOGS STRATÉGIQUES POUR LE DÉBOGAGE ---
+    console.log('--- [Debug] Données du produit récupérées de la DB ---');
+    console.log(product);
+    console.log(`--- [Debug] URL de téléchargement envoyée au frontend : ${product.file_url} ---`);
+    // --- FIN DES LOGS ---
+
     // --- ÉTAPE 4: Répondre avec le lien de téléchargement du PDF ---
     res.json({
       success: true,
