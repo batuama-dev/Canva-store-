@@ -39,16 +39,13 @@ const OrderSuccessPage = () => {
     const uploadIndex = urlParts.indexOf('upload');
     const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
 
-    // 4. TEST: Construire une URL de test avec `f_pdf` uniquement pour isoler le problème.
-    const newUrl = `${baseUrl}/f_pdf/${publicId}`;
+    // 4. Construire l'URL de téléchargement finale avec `fl_attachment`.
+    const finalUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] URL de test (f_pdf uniquement):', newUrl);
-    
-    // Pour le test final, on peut réactiver cette ligne :
-    // const finalWorkingUrl = `${baseUrl}/f_pdf,fl_attachment:${finalFilename}/${publicId}`;
+    console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
 
-    return newUrl;
+    return finalUrl;
   };
 
   useEffect(() => {

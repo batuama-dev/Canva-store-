@@ -1,7 +1,6 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-const path = require('path');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -14,16 +13,13 @@ const storage = new CloudinaryStorage({
   params: (req, file) => {
     const folder = 'canva-store';
 
-    // For PDF files, explicitly set the format to 'pdf'
+    // For PDF files, just ensure they are uploaded as raw resources.
+    // Cloudinary will generate a random public_id, and we will handle the filename on download.
+    // This avoids the 401 Unauthorized error.
     if (file.fieldname === 'pdfFile') {
-      const originalName = path.basename(file.originalname, path.extname(file.originalname));
-      const public_id = `${originalName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`;
-      
       return {
         folder: folder,
         resource_type: 'raw',
-        public_id: public_id,
-        format: 'pdf' // Explicitly set the format to ensure .pdf extension
       };
     }
 
@@ -43,4 +39,5 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 module.exports = upload;
+
 
