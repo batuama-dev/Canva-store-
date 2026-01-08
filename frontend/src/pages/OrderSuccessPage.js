@@ -21,7 +21,7 @@ const OrderSuccessPage = () => {
       return url;
     }
 
-    // 1. Extraire le public_id de l'URL originale.
+    // 1. Extraire le public_id de l'URL originale (la partie après /v_number/).
     const match = url.match(/\/v\d+\/(.*)$/);
     const publicId = match ? match[1] : null;
 
@@ -39,12 +39,11 @@ const OrderSuccessPage = () => {
     const uploadIndex = urlParts.indexOf('upload');
     const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
 
-    // 4. Construire la nouvelle URL en ajoutant .pdf au public_id.
-    // C'est l'étape cruciale pour indiquer à Cloudinary le format original.
-    const newUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}.pdf`;
+    // 4. Construire la nouvelle URL avec les transformations f_pdf et fl_attachment.
+    const newUrl = `${baseUrl}/f_pdf,fl_attachment:${finalFilename}/${publicId}`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] URL de téléchargement finale:', newUrl);
+    console.log('--- [Debug Frontend] URL de téléchargement finale corrigée:', newUrl);
 
     return newUrl;
   };
