@@ -256,3 +256,54 @@ Nous avons franchi des étapes cruciales. Le code est prêt et l'infrastructure 
     *   Le fichier de configuration d'axios (`frontend/src/api/axios.js`) a été mis à jour pour inclure l'option `withCredentials: true`.
     *   Ce changement force `axios` à envoyer les cookies avec chaque requête, permettant au backend d'identifier et d'authentifier correctement la session de l'utilisateur.
 *   **Résultat :** L'interface d'administration est maintenant stable et pleinement fonctionnelle après la connexion. ✅
+
+---
+
+## 10. Résolution du Problème de Téléchargement de PDF (8 Janvier 2026)
+
+*   **Statut :** **TERMINÉ** ✅
+*   **Objectif :** Assurer que le téléchargement des fichiers PDF après un achat fonctionne de manière fiable, en fournissant un fichier avec le nom et l'extension corrects.
+
+### 10.1. Le Problème Initial
+*   **Symptômes :** Après un paiement réussi, le clic sur le bouton de téléchargement résultait en un fichier sans extension (ex: `download`) ou un fichier temporaire (`.crdownload`), obligeant l'utilisateur à renommer manuellement le fichier en `.pdf` pour l'ouvrir.
+
+### 10.2. Itérations de Débogage
+
+1.  **Tentative 1 : Transformation d'URL Cloudinary (`fl_attachment`)**
+    *   **Action :** Modification du code frontend pour injecter le paramètre `fl_attachment:nom-du-fichier.pdf` dans l'URL Cloudinary.
+    *   **Résultat :** Échec. La transformation n'a eu aucun effet car le PDF était uploadé avec `resource_type: 'raw'`, qui ne supporte pas ce type de transformation d'URL.
+
+2.  **Tentative 2 : Attribut `download` HTML5**
+    *   **Action :** Simplification du code frontend pour utiliser l'URL Cloudinary brute et se fier uniquement à l'attribut `download="nom.pdf"` de la balise `<a>`.
+    *   **Résultat :** Échec. Le navigateur ignorait l'attribut `download` à cause des politiques de sécurité modernes sur les requêtes *cross-origin* (le frontend sur Vercel et Cloudinary étant sur des domaines différents).
+
+3.  **Tentative 3 : Changement du `resource_type` en `'image'`**
+    *   **Action :** Modification de la configuration d'upload sur Cloudinary (`backend/config/cloudinary.js`) pour traiter les PDF comme `resource_type: 'image'`, puis ré-application de la transformation d'URL `fl_attachment`.
+    *   **Résultat :** Échec. Cette approche a provoqué une nouvelle erreur : **`HTTP ERROR 401 (Unauthorized)`**. L'analyse des logs a révélé une erreur `x-cld-error: 'deny or ACL failure'`, indiquant que les règles de sécurité de Cloudinary empêchaient une requête de serveur à serveur (Render -> Cloudinary) sur une ressource de type 'image' non standard.
+
+### 10.3. Solution Finale : Implémentation d'un Proxy de Téléchargement
+
+Face à la complexité et aux restrictions des solutions côté client et des transformations d'URL, une approche **côté serveur** a été implémentée pour garantir un contrôle total.
+
+*   **Principe :** Le backend agit comme un intermédiaire de confiance (un proxy) pour le téléchargement.
+
+*   **Implémentation :**
+    1.  **Route API de Proxy (Backend) :**
+        *   Création d'une nouvelle route sécurisée : `GET /api/sales/download/:saleId`.
+        *   Le contrôleur (`saleController.js`) associé à cette route :
+            a.  Récupère l'URL Cloudinary du produit depuis la base de données via l'ID de la vente (`saleId`).
+            b.  Utilise `axios` pour télécharger le contenu du fichier PDF depuis Cloudinary en interne sur le serveur Render.
+            c.  Renvoie le contenu du fichier au navigateur du client avec deux en-têtes HTTP cruciaux :
+                *   `Content-Type: application/pdf` (indique la nature du fichier).
+                *   `Content-Disposition: attachment; filename="nom-du-produit.pdf"` (force le téléchargement et définit le nom du fichier).
+
+    2.  **Configuration du Routing (Frontend -> Backend) :**
+        *   Le frontend (sur Vercel) téléchargeait un fichier `index.html` car il ne savait pas comment gérer la route `/api/...`.
+        *   **Solution :** Création d'un fichier `vercel.json` pour configurer une règle de "rewrite" (proxy). Cette règle indique à Vercel de rediriger toutes les requêtes commençant par `/api/` vers le backend sur Render (`https://canva-store.onrender.com`).
+
+    3.  **Mise à Jour de la Logique d'Upload (Backend) :**
+        *   Pour résoudre l'erreur `401 Unauthorized`, la configuration de Cloudinary (`cloudinary.js`) a été restaurée pour uploader les PDF avec leur type naturel, `resource_type: 'raw'`. Le proxy rendant les transformations d'URL inutiles, cette simplification était possible et a résolu le problème d'accès.
+
+*   **Résultat Final :**
+    *   Le processus de téléchargement est maintenant **robuste, sécurisé et fiable**.
+    *   Le backend a un contrôle total sur le nommage et la livraison du fichier, éliminant toute dépendance aux configurations complexes de Cloudinary ou aux comportements variables des navigateurs. ✅
