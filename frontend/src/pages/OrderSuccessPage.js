@@ -27,37 +27,6 @@ const OrderSuccessPage = () => {
       .replace(/-+$/, '');            // Trim - from end of text
   };
 
-  // --- Solution to force download with proper filename ---
-  const getForceDownloadUrl = (url, productName) => {
-    if (!url || !url.includes('res.cloudinary.com')) {
-      console.warn('URL non valide ou non-Cloudinary:', url);
-      return url;
-    }
-
-    const urlParts = url.split('/upload/');
-    if (urlParts.length !== 2) {
-      console.warn('Format d\'URL inattendu:', url);
-      return url; // Return original if format is unexpected
-    }
-
-    // 1. Sanitize the product name to be URL-friendly
-    const safeFilename = slugify(productName) || 'pack-templyfast';
-
-    // 2. Append the .pdf extension
-    const filenameWithExt = `${safeFilename}.pdf`;
-
-    // 3. Construct the Cloudinary transformation string
-    // This injects /fl_attachment:filename.pdf/ between /upload/ and the version/public_id
-    const finalUrl = `${urlParts[0]}/upload/fl_attachment:${filenameWithExt}/${urlParts[1]}`;
-
-    console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] Nom du produit:', productName);
-    console.log('--- [Debug Frontend] Nom de fichier sécurisé:', filenameWithExt);
-    console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
-
-    return finalUrl;
-  };
-
   useEffect(() => {
     const confirmPayment = async () => {
       if (!sessionId) {
@@ -74,13 +43,19 @@ const OrderSuccessPage = () => {
 
         if (response.data && response.data.download_url) {
           const productName = response.data.product_name || 'pack-templyfast';
-          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url, productName);
+          const downloadUrl = response.data.download_url;
           
+          // --- Nouvelle approche : Se fier à l'attribut `download` ---
+          // L'URL de Cloudinary reste intacte.
+          // Le nom du fichier est géré par le navigateur via l'attribut `download`.
           setDownloadInfo({
-            url: forceDownloadUrl,
-            // The download attribute on the <a> tag is a fallback
-            name: `${slugify(productName)}.pdf`
+            url: downloadUrl,
+            name: `${slugify(productName)}.pdf` // ex: "mon-super-pack.pdf"
           });
+
+          console.log('--- [Debug Frontend] URL brute:', downloadUrl);
+          console.log('--- [Debug Frontend] Nom de fichier pour l\'attribut download:', `${slugify(productName)}.pdf`);
+
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
         }
