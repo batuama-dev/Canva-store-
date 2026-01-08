@@ -27,6 +27,40 @@ const OrderSuccessPage = () => {
       .replace(/-+$/, '');            // Trim - from end of text
   };
 
+  // --- Solution to force download with proper filename via Cloudinary URL transformation ---
+  const getForceDownloadUrl = (url, productName) => {
+    // This check is important. If the URL is not a Cloudinary one, we don't alter it.
+    if (!url || !url.includes('res.cloudinary.com')) {
+      console.warn('URL non valide ou non-Cloudinary:', url);
+      return { url, name: 'download.pdf' };
+    }
+    
+    // The URL from Cloudinary might be in the format:
+    // https://res.cloudinary.com/<cloud_name>/image/upload/<version>/<folder>/<public_id>.pdf
+    const urlParts = url.split('/upload/');
+    if (urlParts.length !== 2) {
+      console.warn('Format d\'URL inattendu:', url);
+      return { url, name: `${slugify(productName)}.pdf`}; // Fallback
+    }
+
+    const safeFilename = slugify(productName) || 'pack-templyfast';
+    const filenameWithExt = `${safeFilename}.pdf`;
+
+    // Construct the Cloudinary transformation string
+    // This injects /fl_attachment:filename.pdf/ between /upload/ and the version/public_id
+    const finalUrl = `${urlParts[0]}/upload/fl_attachment:${filenameWithExt}/${urlParts[1]}`;
+
+    console.log('--- [Debug Frontend] URL Originale:', url);
+    console.log('--- [Debug Frontend] Nom de fichier sécurisé:', filenameWithExt);
+    console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
+
+    return {
+      url: finalUrl,
+      name: filenameWithExt // Also use it for the download attribute as a fallback
+    };
+  };
+
+
   useEffect(() => {
     const confirmPayment = async () => {
       if (!sessionId) {
@@ -43,18 +77,11 @@ const OrderSuccessPage = () => {
 
         if (response.data && response.data.download_url) {
           const productName = response.data.product_name || 'pack-templyfast';
-          const downloadUrl = response.data.download_url;
           
-          // --- Nouvelle approche : Se fier à l'attribut `download` ---
-          // L'URL de Cloudinary reste intacte.
-          // Le nom du fichier est géré par le navigateur via l'attribut `download`.
-          setDownloadInfo({
-            url: downloadUrl,
-            name: `${slugify(productName)}.pdf` // ex: "mon-super-pack.pdf"
-          });
-
-          console.log('--- [Debug Frontend] URL brute:', downloadUrl);
-          console.log('--- [Debug Frontend] Nom de fichier pour l\'attribut download:', `${slugify(productName)}.pdf`);
+          // Get the final URL and name from our helper
+          const { url, name } = getForceDownloadUrl(response.data.download_url, productName);
+          
+          setDownloadInfo({ url, name });
 
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');

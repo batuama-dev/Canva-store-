@@ -13,17 +13,20 @@ const storage = new CloudinaryStorage({
   params: (req, file) => {
     const folder = 'canva-store';
 
-    // For PDF files, just ensure they are uploaded as raw resources.
-    // Cloudinary will generate a random public_id, and we will handle the filename on download.
-    // This avoids the 401 Unauthorized error.
+    // Pour les fichiers PDF, les traiter comme 'image' pour activer les transformations (ex: fl_attachment)
     if (file.fieldname === 'pdfFile') {
+      const originalName = file.originalname.split('.').slice(0, -1).join('.');
+      const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
+      const public_id = `${sanitizedName}_${Date.now()}`;
+      
       return {
         folder: folder,
-        resource_type: 'raw',
+        public_id: public_id,
+        resource_type: 'image', // Traiter comme une 'image' pour permettre les transformations d'URL
       };
     }
 
-    // For image files, generate a custom public_id and convert to jpg
+    // Pour les fichiers image, générer un public_id personnalisé et convertir en jpg
     const originalName = file.originalname.split('.').slice(0, -1).join('.');
     const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
     const public_id = `${sanitizedName}_${Date.now()}`;
@@ -39,5 +42,3 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 module.exports = upload;
-
-
