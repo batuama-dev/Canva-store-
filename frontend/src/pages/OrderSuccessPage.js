@@ -21,16 +21,16 @@ const OrderSuccessPage = () => {
       return url;
     }
 
-    // 1. Extraire le public_id de l'URL originale. C'est la partie après la version (ex: /v1234567890/).
+    // 1. Extraire le public_id de l'URL originale.
     const match = url.match(/\/v\d+\/(.*)$/);
     const publicId = match ? match[1] : null;
 
     if (!publicId) {
       console.warn('Impossible d\'extraire le public_id de l\'URL Cloudinary. Retour de l\'URL originale:', url);
-      return url; // Simplification: on retourne l'URL originale si le format est inattendu
+      return url;
     }
     
-    // 2. Nettoyer le nom de fichier désiré et s'assurer qu'il se termine par .pdf
+    // 2. Nettoyer le nom de fichier pour la directive d'attachement.
     const safeFilename = filename.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
     const finalFilename = safeFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
 
@@ -39,12 +39,12 @@ const OrderSuccessPage = () => {
     const uploadIndex = urlParts.indexOf('upload');
     const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
 
-    // 4. Construire la nouvelle URL avec la transformation de téléchargement
-    // Format: .../raw/upload/fl_attachment:filename/public_id
-    const newUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}`;
+    // 4. Construire la nouvelle URL en ajoutant .pdf au public_id.
+    // C'est l'étape cruciale pour indiquer à Cloudinary le format original.
+    const newUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}.pdf`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] URL de téléchargement transformée:', newUrl);
+    console.log('--- [Debug Frontend] URL de téléchargement finale:', newUrl);
 
     return newUrl;
   };
