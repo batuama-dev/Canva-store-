@@ -17,20 +17,43 @@ const OrderSuccessPage = () => {
   // Function to transform Cloudinary URL to force download with a specific filename
   const getForceDownloadUrl = (url, filename) => {
     if (!url || !url.includes('res.cloudinary.com')) {
-      return url; // Return original URL if it's not a valid Cloudinary URL
+      console.warn('URL non valide ou non-Cloudinary:', url);
+      return url;
+    }
+
+    // 1. Extraire le public_id de l'URL originale. C'est la partie après la version (ex: /v1234567890/).
+    const match = url.match(/\/v\d+\/(.*)$/);
+    const publicId = match ? match[1] : null;
+
+    if (!publicId) {
+      console.warn('Impossible d\'extraire le public_id de l'URL Cloudinary:', url);
+      // Tenter une solution de repli si le format est inattendu mais contient "upload/"
+      const parts = url.split('/upload/');
+      if (parts.length === 2) {
+        const potentialPublicId = parts[1];
+        console.log(`Tentative de repli avec le public_id potentiel : ${potentialPublicId}`);
+        return `${parts[0]}/upload/fl_attachment/${potentialPublicId}`;
+      }
+      return url;
     }
     
-    // Create a URL-safe version of the filename, and ensure it has a .pdf extension
+    // 2. Nettoyer le nom de fichier désiré et s'assurer qu'il se termine par .pdf
     const safeFilename = filename.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
     const finalFilename = safeFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
 
-    const parts = url.split('/upload/');
-    if (parts.length !== 2) {
-      return url; // Return original if format is unexpected
-    }
-    
-    // Insert fl_attachment:filename.pdf flag
-    return `${parts[0]}/upload/fl_attachment:${finalFilename}/${parts[1]}`;
+    // 3. Extraire l'URL de base (ex: https://res.cloudinary.com/cloud/raw/upload)
+    const urlParts = url.split('/');
+    const uploadIndex = urlParts.indexOf('upload');
+    const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
+
+    // 4. Construire la nouvelle URL avec la transformation de téléchargement
+    // Format: .../raw/upload/fl_attachment:filename/public_id
+    const newUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}`;
+
+    console.log('--- [Debug Frontend] URL Originale:', url);
+    console.log('--- [Debug Frontend] URL de téléchargement transformée:', newUrl);
+
+    return newUrl;
   };
 
   useEffect(() => {
@@ -42,8 +65,14 @@ const OrderSuccessPage = () => {
       }
 
       try {
-        // Call backend to confirm the Stripe session and get download URL
+        // Appeler le backend pour confirmer la session Stripe et obtenir l'URL de téléchargement
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
+
+        // --- LOGS STRATÉGIQUES ---
+        console.log('--- [Debug Frontend] Réponse reçue du backend (/confirm-stripe-session) ---');
+        console.log(response.data);
+        // --- FIN DES LOGS ---
+
         if (response.data && response.data.download_url) {
           const productName = response.data.product_name || 'pack-templyfast';
           const forceDownloadUrl = getForceDownloadUrl(response.data.download_url, productName);
