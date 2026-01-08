@@ -26,15 +26,8 @@ const OrderSuccessPage = () => {
     const publicId = match ? match[1] : null;
 
     if (!publicId) {
-      console.warn('Impossible d\'extraire le public_id de l'URL Cloudinary:', url);
-      // Tenter une solution de repli si le format est inattendu mais contient "upload/"
-      const parts = url.split('/upload/');
-      if (parts.length === 2) {
-        const potentialPublicId = parts[1];
-        console.log(`Tentative de repli avec le public_id potentiel : ${potentialPublicId}`);
-        return `${parts[0]}/upload/fl_attachment/${potentialPublicId}`;
-      }
-      return url;
+      console.warn('Impossible d\'extraire le public_id de l\'URL Cloudinary. Retour de l\'URL originale:', url);
+      return url; // Simplification: on retourne l'URL originale si le format est inattendu
     }
     
     // 2. Nettoyer le nom de fichier désiré et s'assurer qu'il se termine par .pdf
