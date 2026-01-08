@@ -39,11 +39,14 @@ const OrderSuccessPage = () => {
     const uploadIndex = urlParts.indexOf('upload');
     const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
 
-    // 4. Construire la nouvelle URL avec les transformations f_pdf et fl_attachment.
-    const newUrl = `${baseUrl}/f_pdf,fl_attachment:${finalFilename}/${publicId}`;
+    // 4. TEST: Construire une URL de test avec `f_pdf` uniquement pour isoler le problème.
+    const newUrl = `${baseUrl}/f_pdf/${publicId}`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] URL de téléchargement finale corrigée:', newUrl);
+    console.log('--- [Debug Frontend] URL de test (f_pdf uniquement):', newUrl);
+    
+    // Pour le test final, on peut réactiver cette ligne :
+    // const finalWorkingUrl = `${baseUrl}/f_pdf,fl_attachment:${finalFilename}/${publicId}`;
 
     return newUrl;
   };
