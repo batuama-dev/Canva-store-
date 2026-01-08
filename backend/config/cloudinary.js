@@ -13,15 +13,13 @@ const storage = new CloudinaryStorage({
   params: (req, file) => {
     const folder = 'canva-store';
 
-    // For PDF files, upload as a raw file and let Cloudinary generate the public_id
-    // This ensures the file extension is correctly preserved.
+    // For PDF files, specify resource_type as 'raw'.
+    // By not providing a public_id, Cloudinary will generate a random one 
+    // and automatically keep the original file's extension (.pdf).
     if (file.fieldname === 'pdfFile') {
-      const originalName = file.originalname.split('.').slice(0, -1).join('.');
       return {
         folder: folder,
         resource_type: 'raw',
-        public_id: originalName, // Use original name to preserve extension
-        transformation: [{ flags: 'attachment' }] // Add attachment flag
       };
     }
 
