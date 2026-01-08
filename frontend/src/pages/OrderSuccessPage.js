@@ -27,36 +27,36 @@ const OrderSuccessPage = () => {
       .replace(/-+$/, '');            // Trim - from end of text
   };
 
-  // --- Solution to force download with proper filename via Cloudinary URL transformation ---
+  // --- Final Attempt: Force download with a more explicit Cloudinary URL transformation ---
   const getForceDownloadUrl = (url, productName) => {
-    // This check is important. If the URL is not a Cloudinary one, we don't alter it.
     if (!url || !url.includes('res.cloudinary.com')) {
       console.warn('URL non valide ou non-Cloudinary:', url);
       return { url, name: 'download.pdf' };
     }
     
-    // The URL from Cloudinary might be in the format:
-    // https://res.cloudinary.com/<cloud_name>/image/upload/<version>/<folder>/<public_id>.pdf
     const urlParts = url.split('/upload/');
     if (urlParts.length !== 2) {
       console.warn('Format d\'URL inattendu:', url);
-      return { url, name: `${slugify(productName)}.pdf`}; // Fallback
+      return { url, name: `${slugify(productName)}.pdf`};
     }
 
     const safeFilename = slugify(productName) || 'pack-templyfast';
     const filenameWithExt = `${safeFilename}.pdf`;
 
-    // Construct the Cloudinary transformation string
-    // This injects /fl_attachment:filename.pdf/ between /upload/ and the version/public_id
-    const finalUrl = `${urlParts[0]}/upload/fl_attachment:${filenameWithExt}/${urlParts[1]}`;
+    // Construct a more explicit Cloudinary transformation string
+    // f_pdf: Ensures the output format is PDF.
+    // fl_attachment: Forces download.
+    const transformation = `f_pdf,fl_attachment:${filenameWithExt}`;
+
+    const finalUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] Nom de fichier sécurisé:', filenameWithExt);
+    console.log('--- [Debug Frontend] Transformation:', transformation);
     console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
 
     return {
       url: finalUrl,
-      name: filenameWithExt // Also use it for the download attribute as a fallback
+      name: filenameWithExt
     };
   };
 
@@ -78,7 +78,6 @@ const OrderSuccessPage = () => {
         if (response.data && response.data.download_url) {
           const productName = response.data.product_name || 'pack-templyfast';
           
-          // Get the final URL and name from our helper
           const { url, name } = getForceDownloadUrl(response.data.download_url, productName);
           
           setDownloadInfo({ url, name });
