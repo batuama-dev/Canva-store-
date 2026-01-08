@@ -23,10 +23,10 @@ const ProductForm = () => {
     price: '',
     discount_price: '',
     is_featured: false,
-    main_preview: '', // This will hold the URL of the existing image in edit mode
-    gallery: [], // This will hold URLs of existing gallery images
+    image_url: '', // Holds the URL of the existing main image
+    gallery: [],   // Holds URLs of existing gallery images
     canva_links: [''],
-    download_file_url: '', // This will hold the URL of the existing download file in edit mode
+    file_url: '',  // Holds the URL of the existing download file
     slug: ''
   });
 
@@ -50,15 +50,20 @@ const ProductForm = () => {
       setLoading(true);
       axios.get(`/api/products/${id}`)
         .then(res => {
-          const data = {
-            ...res.data,
-            gallery: res.data.gallery || [],
-            canva_links: res.data.canva_links && res.data.canva_links.length > 0 ? res.data.canva_links : ['']
+          const fetchedData = res.data;
+          
+          // Correctly map API response to component state
+          const mappedData = {
+            ...fetchedData,
+            gallery: fetchedData.images ? fetchedData.images.map(img => img.image_url) : [],
+            canva_links: fetchedData.canva_links && fetchedData.canva_links.length > 0 ? fetchedData.canva_links : ['']
           };
-          setProduct(data);
-          setMainPreviewUrl(data.main_preview); // Set existing main preview
-          setGalleryPreviewUrls(data.gallery); // Set existing gallery previews
-          setDownloadFileName(data.download_file_url ? data.download_file_url.split('/').pop() : ''); // Display existing file name
+
+          setProduct(mappedData);
+          setMainPreviewUrl(mappedData.image_url || '');
+          setGalleryPreviewUrls(mappedData.gallery || []);
+          setDownloadFileName(mappedData.file_url ? mappedData.file_url.split('/').pop() : '');
+          
           setLoading(false);
         })
         .catch(err => {
@@ -130,7 +135,7 @@ const ProductForm = () => {
       setMainPreviewUrl(previewUrl);
     } else {
       setMainPreviewFile(null);
-      setMainPreviewUrl(isEditing ? product.main_preview : ''); // Revert to existing or clear
+      setMainPreviewUrl(isEditing ? product.image_url : ''); // Revert to existing or clear
     }
   };
 
@@ -169,7 +174,7 @@ const ProductForm = () => {
       setDownloadFileName(file.name);
     } else {
       setDownloadFile(null);
-      setDownloadFileName(isEditing && product.download_file_url ? product.download_file_url.split('/').pop() : '');
+      setDownloadFileName(isEditing && product.file_url ? product.file_url.split('/').pop() : '');
     }
   };
 
