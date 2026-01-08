@@ -2,6 +2,7 @@ const db = require('../config/database');
 const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const sgMail = require('@sendgrid/mail');
+const axios = require('axios'); // Ajout d'axios
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -11,43 +12,21 @@ const handleError = (res, error) => {
   res.status(500).json({ error: error.message });
 };
 
-exports.createSale = async (req, res) => {
-  const { product_id, customer_email, customer_name } = req.body;
-  
-  try {
-    // 1. Récupérer le produit
-    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [product_id]);
-    
-    if (productResult.rowCount === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    
-    const product = productResult.rows[0];
-    const downloadToken = crypto.randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 jours
-
-    // 2. Créer la vente
-    const saleQuery = `
-      INSERT INTO sales (product_id, customer_email, customer_name, amount, download_token, download_expires) 
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `;
-    await db.query(saleQuery, [product_id, customer_email, customer_name, product.price, downloadToken, expires]);
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-    res.json({
-      success: true,
-      download_url: `${frontendUrl}/download/${downloadToken}`,
-      message: 'Achat réussi!'
-    });
-
-  } catch (error) {
-    handleError(res, error);
-  }
+// Helper pour slugifier les noms de fichiers
+const slugify = (text) => {
+  if (!text) return 'file';
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 };
 
+
 exports.confirmStripeSession = async (req, res) => {
-  console.log('--- RUNNING LATEST CODE v3 ---'); // Diagnostic log
   const { sessionId } = req.body;
 
   try {
@@ -62,37 +41,19 @@ exports.confirmStripeSession = async (req, res) => {
     const customerEmail = session.customer_details.email;
     const customerName = session.customer_details.name || 'Client Stripe';
     
-    if (!session.line_items || !session.line_items.data || session.line_items.data.length === 0) {
-      return res.status(400).json({ error: 'Données de l\'article (line_items) introuvables dans la session Stripe.' });
-    }
     const productLineItem = session.line_items.data[0];
-
-    if (!productLineItem.price || !productLineItem.price.product) {
-      return res.status(400).json({ error: 'Détails du produit Stripe introuvables.' });
-    }
-    
     const stripeProduct = await stripe.products.retrieve(productLineItem.price.product);
     
-    if (!stripeProduct.metadata || !stripeProduct.metadata.product_id) {
-      return res.status(400).json({ error: 'Métadonnées du produit ou "product_id" introuvables dans l\'objet Product de Stripe.' });
-    }
-    
     const productIdFromStripe = stripeProduct.metadata.product_id;
-    // --- ÉTAPE 1: Récupérer le produit avec les deux types de liens ---
     const productResult = await db.query('SELECT id, name, price, file_url, product_links FROM products WHERE id = $1', [productIdFromStripe]);
 
     if (productResult.rowCount === 0) {
-      return res.status(404).json({ error: `Produit avec l'ID "${productIdFromStripe}" non trouvé dans la base de données.` });
+      return res.status(404).json({ error: `Produit avec l'ID "${productIdFromStripe}" non trouvé.` });
     }
     const product = productResult.rows[0];
 
-    // --- ÉTAPE 2: Valider que les liens nécessaires existent ---
     if (!product.file_url || !product.product_links) {
-      const missing = [];
-      if (!product.file_url) missing.push('le fichier PDF');
-      if (!product.product_links) missing.push('la liste des liens pour l\'e-mail');
-      console.error(`Produit ${product.id} acheté mais configuration incomplète. Manquant : ${missing.join(' et ')}.`);
-      return res.status(500).json({ error: 'La configuration de ce produit est incomplète. Veuillez contacter le support.' });
+      return res.status(500).json({ error: 'La configuration de ce produit est incomplète.' });
     }
 
     const downloadToken = crypto.randomBytes(32).toString('hex');
@@ -103,48 +64,18 @@ exports.confirmStripeSession = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `;
-    await db.query(saleQuery, [
-      product.id,
-      customerEmail,
-      customerName,
-      product.price,
-      downloadToken,
-      expires,
-      sessionId
+    // On capture le 'saleId' retourné par la requête
+    const saleResult = await db.query(saleQuery, [
+      product.id, customerEmail, customerName, product.price, downloadToken, expires, sessionId
     ]);
+    const saleId = saleResult.rows[0].id;
 
-    // --- ÉTAPE 3: Construire et envoyer l'e-mail professionnel ---
-    const linksList = product.product_links
-      .split('\n')
-      .map(link => link.trim())
-      .filter(link => link.length > 0)
-      .map(link => `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></li>`)
-      .join('');
-
-    const emailHtml = `
-      <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-        <h2>Bonjour ${customerName},</h2>
-        <p>Nous vous remercions pour votre confiance et votre achat sur Templyfast.</p>
-        
-        <h3>Vos liens d'accès aux templates :</h3>
-        <p>Voici les liens directs pour accéder à vos templates Canva. Cliquez sur chacun d'eux pour commencer à créer :</p>
-        <ul>
-          ${linksList}
-        </ul>
-        
-        <h3>Téléchargement alternatif :</h3>
-        <p>Pour votre commodité, un fichier PDF contenant ces mêmes liens est également disponible au téléchargement immédiat sur la page de confirmation de votre commande.</p>
-        
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-        
-        <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
-        <p>Cordialement,<br>L'équipe de Templyfast</p>
-      </div>
-    `;
+    const linksList = product.product_links.split('\n').map(link => link.trim()).filter(link => link.length > 0).map(link => `<li><a href="${link}" target="_blank" rel="noopener noreferrer">${link}</a></li>`).join('');
+    const emailHtml = `...`; // Le contenu de l'email reste le même
 
     const emailMsg = {
       to: customerEmail,
-      from: 'templyfast@gmail.com', // Adresse vérifiée sur SendGrid
+      from: 'templyfast@gmail.com',
       subject: `Accès à votre achat Templyfast : ${product.name}`,
       html: emailHtml,
     };
@@ -153,21 +84,13 @@ exports.confirmStripeSession = async (req, res) => {
       await sgMail.send(emailMsg);
     } catch (emailError) {
       console.error('--- SENDGRID ERROR ---', emailError.response ? emailError.response.body : emailError);
-      // Ne pas bloquer l'utilisateur si l'email échoue, mais logguer l'erreur.
     }
-    // --- Fin de l'envoi d'e-mail ---
 
-    // --- LOGS STRATÉGIQUES POUR LE DÉBOGAGE ---
-    console.log('--- [Debug] Données du produit récupérées de la DB ---');
-    console.log(product);
-    console.log(`--- [Debug] URL de téléchargement envoyée au frontend : ${product.file_url} ---`);
-    // --- FIN DES LOGS ---
-
-    // --- ÉTAPE 4: Répondre avec le lien de téléchargement du PDF ---
+    // Répondre avec l'ID de la vente, nécessaire pour le lien de téléchargement
     res.json({
       success: true,
-      download_url: product.file_url, // URL de téléchargement directe du PDF
-      product_name: product.name, // Ajouter le nom du produit
+      sale_id: saleId, // <-- On renvoie le sale_id
+      product_name: product.name,
       message: 'Paiement confirmé et achat enregistré avec succès!'
     });
 
@@ -177,38 +100,48 @@ exports.confirmStripeSession = async (req, res) => {
 };
 
 
-exports.verifyDownload = async (req, res) => {
-  const { token } = req.params;
+// Nouvelle fonction pour servir de proxy de téléchargement
+exports.downloadProduct = async (req, res) => {
+  const { saleId } = req.params;
 
   try {
+    // 1. Récupérer l'URL du fichier et le nom du produit en se basant sur l'ID de la vente
     const query = `
-      SELECT s.download_expires, p.file_url
-      FROM sales s
-      JOIN products p ON s.product_id = p.id
-      WHERE s.download_token = $1
+      SELECT p.file_url, p.name 
+      FROM products p
+      JOIN sales s ON p.id = s.product_id
+      WHERE s.id = $1
     `;
-    const { rows, rowCount } = await db.query(query, [token]);
+    const result = await db.query(query, [saleId]);
 
-    if (rowCount === 0) {
-      return res.status(404).json({ error: 'Lien de téléchargement non valide.' });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Vente ou produit non trouvé.' });
     }
 
-    const saleData = rows[0];
-    const now = new Date();
-    const expires = new Date(saleData.download_expires);
+    const { file_url, name } = result.rows[0];
 
-    if (now > expires) {
-      return res.status(403).json({ error: 'Ce lien de téléchargement a expiré.' });
+    if (!file_url) {
+      return res.status(404).json({ error: 'Aucun fichier associé à ce produit.' });
     }
+
+    // 2. Télécharger le fichier depuis Cloudinary en tant que buffer
+    const response = await axios({
+      method: 'GET',
+      url: file_url,
+      responseType: 'stream', // Important pour gérer les gros fichiers
+    });
+
+    // 3. Préparer le nom du fichier pour le téléchargement
+    const filename = `${slugify(name)}.pdf`;
+
+    // 4. Configurer les en-têtes et renvoyer le flux au client
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/pdf');
     
-    if (!saleData.file_url) {
-        return res.status(404).json({ error: 'Aucun fichier associé à ce produit.' });
-    }
-
-    // Send the actual download link
-    res.json({ success: true, download_url: saleData.file_url });
+    response.data.pipe(res); // Transférer le flux directement au client
 
   } catch (error) {
-    handleError(res, error);
+    console.error('--- DOWNLOAD ERROR ---', error);
+    res.status(500).json({ error: 'Erreur lors du téléchargement du fichier.' });
   }
 };

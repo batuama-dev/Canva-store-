@@ -5,7 +5,9 @@ const saleController = require('../controllers/saleController');
 
 router.post('/', saleController.createSale);
 
-router.get('/download/:token', saleController.verifyDownload);
+// Nouvelle route pour le téléchargement via le proxy backend
+router.get('/download/:saleId', saleController.downloadProduct);
+
 router.post('/confirm-stripe-session', saleController.confirmStripeSession);
 
 module.exports = router;

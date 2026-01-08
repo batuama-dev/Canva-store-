@@ -20,46 +20,12 @@ const OrderSuccessPage = () => {
     return text
       .toString()
       .toLowerCase()
-      .replace(/\s+/g, '-')           // Replace spaces with -
-      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-      .replace(/^-+/, '')             // Trim - from start of text
-      .replace(/-+$/, '');            // Trim - from end of text
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
   };
-
-  // --- Final Attempt: Force download with a more explicit Cloudinary URL transformation ---
-  const getForceDownloadUrl = (url, productName) => {
-    if (!url || !url.includes('res.cloudinary.com')) {
-      console.warn('URL non valide ou non-Cloudinary:', url);
-      return { url, name: 'download.pdf' };
-    }
-    
-    const urlParts = url.split('/upload/');
-    if (urlParts.length !== 2) {
-      console.warn('Format d\'URL inattendu:', url);
-      return { url, name: `${slugify(productName)}.pdf`};
-    }
-
-    const safeFilename = slugify(productName) || 'pack-templyfast';
-    const filenameWithExt = `${safeFilename}.pdf`;
-
-    // Construct a more explicit Cloudinary transformation string
-    // f_pdf: Ensures the output format is PDF.
-    // fl_attachment: Forces download.
-    const transformation = `f_pdf,fl_attachment:${filenameWithExt}`;
-
-    const finalUrl = `${urlParts[0]}/upload/${transformation}/${urlParts[1]}`;
-
-    console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] Transformation:', transformation);
-    console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
-
-    return {
-      url: finalUrl,
-      name: filenameWithExt
-    };
-  };
-
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -70,20 +36,32 @@ const OrderSuccessPage = () => {
       }
 
       try {
+        // 1. Confirmer le paiement et récupérer l'ID de la vente
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
 
         console.log('--- [Debug Frontend] Réponse reçue du backend (/confirm-stripe-session) ---');
         console.log(response.data);
 
-        if (response.data && response.data.download_url) {
-          const productName = response.data.product_name || 'pack-templyfast';
+        // 2. Vérifier si on a bien le sale_id
+        if (response.data && response.data.sale_id) {
+          const { sale_id, product_name } = response.data;
           
-          const { url, name } = getForceDownloadUrl(response.data.download_url, productName);
-          
-          setDownloadInfo({ url, name });
+          // 3. Construire le lien qui pointe vers notre backend (proxy)
+          const downloadUrl = `/api/sales/download/${sale_id}`;
+          const downloadName = `${slugify(product_name || 'pack')}.pdf`;
+
+          console.log('--- [Debug Frontend] URL de téléchargement (proxy):', downloadUrl);
+          console.log('--- [Debug Frontend] Nom du fichier pour l\'attribut download:', downloadName);
+
+          setDownloadInfo({
+            url: downloadUrl,
+            name: downloadName, 
+          });
 
         } else {
-          setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
+          // Si la réponse n'a pas le format attendu
+          setError('Le lien de téléchargement n\'a pas pu être généré. Veuillez contacter le support.');
+          console.error('Réponse inattendue de l\'API:', response.data);
         }
       } catch (err) {
         console.error("Erreur lors de la confirmation de la session Stripe:", err);
@@ -101,7 +79,7 @@ const OrderSuccessPage = () => {
       <div className="container mx-auto p-4 text-center">
         <div className="bg-white p-10 rounded-lg shadow-xl max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Confirmation de votre commande...</h1>
-          <p className="text-gray-600 mb-6">Veuillez patienter pendant que nous confirmons votre paiement.</p>
+          <p className="text-gray-600 mb-6">Veuillez patienter pendant que nous générons votre lien de téléchargement sécurisé.</p>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
         </div>
       </div>
@@ -127,7 +105,7 @@ const OrderSuccessPage = () => {
             {downloadInfo ? (
               <a
                 href={downloadInfo.url}
-                download={downloadInfo.name} // Suggests a filename to the browser
+                download={downloadInfo.name} // Fallback, le backend gère le nom
                 rel="noopener noreferrer"
                 className="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"
               >
