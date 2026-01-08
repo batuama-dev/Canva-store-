@@ -367,9 +367,17 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
             <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
         )}
         <div>
-            <label htmlFor="main_preview_file" onClick={() => console.log('Clic détecté sur le label de l\'image principale.')} className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <label htmlFor="main_preview_file" className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <span>{previewUrl ? 'Changer l\'image' : 'Sélectionner une image'}</span>
-                <input id="main_preview_file" name="main_preview_file" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={onFileChange} accept="image/png, image/jpeg, image/webp" />
+                <input 
+                  id="main_preview_file" 
+                  name="main_preview_file" 
+                  type="file" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  onChange={onFileChange} 
+                  onClick={(e) => console.log('Input IMG Principal: defaultPrevented?', e.defaultPrevented)}
+                  accept="image/png, image/jpeg, image/webp" 
+                />
             </label>
              {previewUrl && (
                 <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="ml-2 text-sm text-red-600 hover:text-red-800">Supprimer</button>
@@ -389,10 +397,19 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
                     </button>
                 </div>
             ))}
-            <label htmlFor="gallery_files" onClick={() => console.log('Clic détecté sur le label de la galerie.')} className="relative w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+            <label htmlFor="gallery_files" className="relative w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
                 <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span className="mt-2 block text-sm font-medium text-gray-600">Ajouter</span>
-                <input id="gallery_files" name="gallery_files" type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={onFilesChange} accept="image/png, image/jpeg, image/webp" multiple />
+                <input 
+                  id="gallery_files" 
+                  name="gallery_files" 
+                  type="file" 
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                  onChange={onFilesChange} 
+                  onClick={(e) => console.log('Input Galerie: defaultPrevented?', e.defaultPrevented)}
+                  accept="image/png, image/jpeg, image/webp" 
+                  multiple 
+                />
             </label>
         </div>
     </div>
@@ -410,10 +427,18 @@ const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) =>
 );
 
 const DownloadFileUploadField = ({ fileName, onFileChange }) => (
-    <div className="flex items-center gap-4" onClick={() => console.log('Clic détecté sur la zone du fichier PDF.')}>
+    <div className="flex items-center gap-4">
         <div className="flex-1">
             <label htmlFor="download_file" className="sr-only">Fichier PDF</label>
-            <input id="download_file" name="download_file" type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onChange={onFileChange} accept=".pdf" />
+            <input 
+              id="download_file" 
+              name="download_file" 
+              type="file" 
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" 
+              onChange={onFileChange} 
+              onClick={(e) => console.log('Input PDF: defaultPrevented?', e.defaultPrevented)}
+              accept=".pdf" 
+            />
         </div>
         {fileName && (
             <div className="flex items-center gap-2">
