@@ -14,36 +14,24 @@ const OrderSuccessPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Function to transform Cloudinary URL to force download with a specific filename
-  const getForceDownloadUrl = (url, filename) => {
+  // Final Workaround: Force download without renaming. The user must manually rename the file to .pdf.
+  const getForceDownloadUrl = (url) => {
     if (!url || !url.includes('res.cloudinary.com')) {
       console.warn('URL non valide ou non-Cloudinary:', url);
       return url;
     }
 
-    // 1. Extraire le public_id de l'URL originale (la partie après /v_number/).
-    const match = url.match(/\/v\d+\/(.*)$/);
-    const publicId = match ? match[1] : null;
-
-    if (!publicId) {
-      console.warn('Impossible d\'extraire le public_id de l\'URL Cloudinary. Retour de l\'URL originale:', url);
-      return url;
+    const urlParts = url.split('/upload/');
+    if (urlParts.length !== 2) {
+      console.warn('Format d\'URL inattendu:', url);
+      return url; // Return original if format is unexpected
     }
-    
-    // 2. Nettoyer le nom de fichier pour la directive d'attachement.
-    const safeFilename = filename.replace(/[^a-z0-9_.-]/gi, '_').toLowerCase();
-    const finalFilename = safeFilename.endsWith('.pdf') ? safeFilename : `${safeFilename}.pdf`;
 
-    // 3. Extraire l'URL de base (ex: https://res.cloudinary.com/cloud/raw/upload)
-    const urlParts = url.split('/');
-    const uploadIndex = urlParts.indexOf('upload');
-    const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
-
-    // 4. Construire l'URL de téléchargement finale avec `fl_attachment`.
-    const finalUrl = `${baseUrl}/fl_attachment:${finalFilename}/${publicId}`;
+    // This injects /fl_attachment/ between /upload/ and the version/public_id part of the URL.
+    const finalUrl = `${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`;
 
     console.log('--- [Debug Frontend] URL Originale:', url);
-    console.log('--- [Debug Frontend] URL de téléchargement finale:', finalUrl);
+    console.log('--- [Debug Frontend] URL de téléchargement (contournement):', finalUrl);
 
     return finalUrl;
   };
@@ -57,21 +45,18 @@ const OrderSuccessPage = () => {
       }
 
       try {
-        // Appeler le backend pour confirmer la session Stripe et obtenir l'URL de téléchargement
         const response = await axios.post('/api/sales/confirm-stripe-session', { sessionId });
 
-        // --- LOGS STRATÉGIQUES ---
         console.log('--- [Debug Frontend] Réponse reçue du backend (/confirm-stripe-session) ---');
         console.log(response.data);
-        // --- FIN DES LOGS ---
 
         if (response.data && response.data.download_url) {
-          const productName = response.data.product_name || 'pack-templyfast';
-          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url, productName);
+          // No longer need product_name for the URL, so it's simplified.
+          const forceDownloadUrl = getForceDownloadUrl(response.data.download_url);
           
           setDownloadInfo({
             url: forceDownloadUrl,
-            name: productName
+            name: response.data.product_name || 'pack-templyfast'
           });
         } else {
           setError('Lien de téléchargement non disponible. Veuillez contacter le support.');
