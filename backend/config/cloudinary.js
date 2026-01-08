@@ -13,16 +13,11 @@ const storage = new CloudinaryStorage({
   params: (req, file) => {
     const folder = 'canva-store';
 
-    // Pour les fichiers PDF, les traiter comme 'image' pour activer les transformations (ex: fl_attachment)
+    // Pour les fichiers PDF, les uploader comme des ressources 'raw'
     if (file.fieldname === 'pdfFile') {
-      const originalName = file.originalname.split('.').slice(0, -1).join('.');
-      const sanitizedName = originalName.replace(/[^a-zA-Z0-9]/g, '_');
-      const public_id = `${sanitizedName}_${Date.now()}`;
-      
       return {
         folder: folder,
-        public_id: public_id,
-        resource_type: 'image', // Traiter comme une 'image' pour permettre les transformations d'URL
+        resource_type: 'raw', // Le type de ressource naturel pour les PDF
       };
     }
 
