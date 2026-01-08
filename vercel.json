@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://canva-store.onrender.com/api/:path*"
+    }
+  ]
+}
