@@ -9,7 +9,6 @@ import Dashboard from './pages/admin/Dashboard';
 import Download from './pages/Download';
 import ClientLayout from './layouts/ClientLayout';
 import AdminLayout from './layouts/AdminLayout';
-import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -34,7 +33,6 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/download/:token" element={<Download />} />
-            <Route path="/checkout/:id" element={<CheckoutPage />} />
             <Route path="/order-success" element={<OrderSuccessPage />} />
           </Route>
 

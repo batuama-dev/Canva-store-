@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from '../api/axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useStripe } from '@stripe/react-stripe-js';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -9,6 +10,10 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const stripe = useStripe();
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -26,9 +31,14 @@ const ProductDetailPage = () => {
       });
   }, [id]);
 
+  useEffect(() => {
+    if (!loading && !stripe) {
+      setError('Stripe n\'a pas pu être chargé. Assurez-vous d\'avoir correctement configuré votre clé publique Stripe.');
+    }
+  }, [loading, stripe]);
+
   const allImages = React.useMemo(() => {
     if (!product) return [];
-    // The image_url from the backend is now a full Cloudinary URL, so no need to prepend baseUrl
     return [
       ...(product.image_url ? [product.image_url] : []),
       ...(product.images ? product.images.map(img => img.image_url) : [])
@@ -51,18 +61,48 @@ const ProductDetailPage = () => {
     setCurrentIndex(newIndex);
   };
   
+  const handlePurchase = async () => {
+    setError('');
+    if (!stripe) {
+      setError('Stripe n\'est pas prêt. Veuillez patienter un instant.');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      const response = await axios.post('/api/checkout/create-checkout-session', {
+        products: [{
+          id: product.id,
+          name: product.name,
+          image_url: product.image_url,
+          price: product.price,
+          quantity: 1,
+        }],
+      });
+
+      if (response.data && response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('URL de paiement non reçue. Veuillez réessayer.');
+        setIsProcessingPayment(false);
+      }
+    } catch (err) {
+      console.error("Erreur lors de la création de la session Stripe:", err);
+      const errorMessage = err.response?.data?.error || 'Une erreur est survenue lors du lancement du paiement.';
+      setError(errorMessage);
+      setIsProcessingPayment(false);
+    }
+  };
+
   const mainImage = allImages[currentIndex];
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen"><div className="loader border-t-4 border-b-4 border-indigo-500 rounded-full w-16 h-16 animate-spin"></div></div>;
   }
 
-  if (error) {
-    return <div className="text-center mt-20 text-red-600 font-semibold">{error}</div>;
-  }
-
-  if (!product) {
-    return <div className="text-center mt-20">Aucun produit à afficher.</div>;
+  if (!product) { // Handles both initial state and fetch failure after loading
+    return <div className="text-center mt-20 text-red-600 font-semibold">{error || 'Aucun produit à afficher.'}</div>;
   }
 
   return (
@@ -121,12 +161,15 @@ const ProductDetailPage = () => {
                 )}
             </div>
             
-            <Link 
-              to={`/checkout/${product.id}`} 
-              className="w-full text-center bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-xl hover:bg-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out block"
+            {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-4 shadow-sm"><p>{error}</p></div>}
+
+            <button 
+              onClick={handlePurchase}
+              disabled={!stripe || isProcessingPayment}
+              className="w-full text-center bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-xl hover:bg-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out block disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Procéder à l'achat
-            </Link>
+              {isProcessingPayment ? 'Traitement...' : 'Procéder à l\'achat'}
+            </button>
 
             <div className="mt-8 text-sm text-gray-500">
                 <p><span className="font-semibold">Catégorie:</span> {product.category || 'Non spécifiée'}</p>
