@@ -88,6 +88,33 @@ const ProductForm = () => {
     };
   }, [mainPreviewUrl, galleryPreviewUrls]);
 
+  // Adjust the number of Canva link inputs based on the selected category
+  useEffect(() => {
+    if (!product.category) {
+      if (product.canva_links.length > 1 || product.canva_links[0] !== '') {
+          setProduct(prev => ({ ...prev, canva_links: [''] }));
+      }
+      return;
+    }
+
+    const requiredLinks = product.category === 'Pack Graphiste Pro' ? 20 : 8;
+    
+    if (product.canva_links.length === requiredLinks) {
+        return;
+    }
+
+    const currentLinks = product.canva_links;
+    const newLinks = Array(requiredLinks).fill('');
+
+    for (let i = 0; i < Math.min(currentLinks.length, requiredLinks); i++) {
+        newLinks[i] = currentLinks[i];
+    }
+
+    setProduct(prev => ({ ...prev, canva_links: newLinks }));
+    // We only want this effect to run when `category` changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.category]);
+
   const categoryPriceMap = {
     'Pack Graphiste Pro': '50',
     'Pack Réseaux sociaux': '20',
@@ -183,19 +210,6 @@ const ProductForm = () => {
     const { value } = e.target;
     const list = [...product[field]];
     list[index] = value;
-    setProduct(prev => ({ ...prev, [field]: list }));
-  };
-
-  const addDynamicListItem = (field) => {
-    setProduct(prev => ({
-      ...prev,
-      [field]: [...prev[field], '']
-    }));
-  };
-
-  const removeDynamicListItem = (index, field) => {
-    if (product[field].length <= 1) return;
-    const list = product[field].filter((_, i) => i !== index);
     setProduct(prev => ({ ...prev, [field]: list }));
   };
 
@@ -317,10 +331,19 @@ const ProductForm = () => {
 
             {/* Canva Links Section */}
             <FormSection title="Liens des Templates Canva">
+                <p className="text-sm text-gray-600 mb-4">
+                    Le nombre de champs de liens est automatiquement ajusté en fonction de la catégorie de pack sélectionnée.
+                </p>
                  {product.canva_links.map((link, index) => (
-                    <DynamicInput key={index} value={link} onChange={(e) => handleDynamicListChange(e, index, 'canva_links')} onRemove={() => removeDynamicListItem(index, 'canva_links')} placeholder="https://www.canva.com/design/..." showRemove={product.canva_links.length > 1}/>
+                    <DynamicInput 
+                        key={index}
+                        index={index}
+                        value={link} 
+                        onChange={(e) => handleDynamicListChange(e, index, 'canva_links')} 
+                        placeholder={`Lien Canva ${index + 1}`}
+                        showRemove={false}
+                    />
                 ))}
-                <button type="button" onClick={() => addDynamicListItem('canva_links')} className="mt-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Ajouter un lien Canva</button>
             </FormSection>
 
             {/* Download File Section */}
@@ -415,9 +438,10 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
     </div>
 );
 
-const DynamicInput = ({ value, onChange, onRemove, placeholder, showRemove }) => (
+const DynamicInput = ({ index, value, onChange, onRemove, placeholder, showRemove = true }) => (
     <div className="flex items-center gap-2 mb-2">
-        <input type="text" value={value} onChange={onChange} placeholder={placeholder} className="form-input" />
+        <label htmlFor={`canva_link_${index}`} className="text-sm font-medium text-gray-500 w-10 text-right">{index + 1}.</label>
+        <input id={`canva_link_${index}`} type="text" value={value} onChange={onChange} placeholder={placeholder} className="form-input" />
         {showRemove && (
             <button type="button" onClick={onRemove} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
