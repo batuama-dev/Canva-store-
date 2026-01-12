@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import axios from '../api/axios';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 // A helper function to parse query parameters
 function useQuery() {
@@ -13,6 +14,7 @@ const OrderSuccessPage = () => {
   const [downloadInfo, setDownloadInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Helper function to create a URL-friendly slug
   const slugify = (text) => {
@@ -25,6 +27,31 @@ const OrderSuccessPage = () => {
       .replace(/\-\-+/g, '-')
       .replace(/^-+/, '')
       .replace(/-+$/, '');
+  };
+
+  const handleDownloadAndRedirect = async () => {
+    if (downloadInfo && downloadInfo.url) {
+      // Create a temporary anchor element to trigger the download
+      const link = document.createElement('a');
+      link.href = downloadInfo.url;
+      link.setAttribute('download', downloadInfo.name); // Suggest filename
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Display SweetAlert2 notification
+      await Swal.fire({
+        title: 'Téléchargement lancé !',
+        text: 'Votre fichier PDF est en cours de téléchargement. Vous allez être redirigé vers la page des produits.',
+        icon: 'success',
+        timer: 3000, // Close after 3 seconds
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+
+      // Redirect to products page
+      navigate('/products');
+    }
   };
 
   useEffect(() => {
@@ -103,14 +130,12 @@ const OrderSuccessPage = () => {
               Votre paiement a été traité avec succès. Un e-mail de confirmation contenant tous les liens d'accès vous a été envoyé.
             </p>
             {downloadInfo ? (
-              <a
-                href={downloadInfo.url}
-                download={downloadInfo.name} // Fallback, le backend gère le nom
-                rel="noopener noreferrer"
+              <button
+                onClick={handleDownloadAndRedirect}
                 className="inline-block bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Télécharger le Fichier
-              </a>
+              </button>
             ) : (
               <p className="text-red-500">
                 Lien de téléchargement non disponible. Veuillez vérifier vos e-mails ou contacter le support.
@@ -124,4 +149,5 @@ const OrderSuccessPage = () => {
 };
 
 export default OrderSuccessPage;
+
 
