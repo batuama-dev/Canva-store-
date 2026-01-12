@@ -44,3 +44,28 @@ exports.getRecentSales = async (req, res) => {
     handleError(res, error);
   }
 };
+
+exports.getActivityLogs = async (req, res) => {
+  const page = parseInt(req.query.page || '1', 10);
+  const limit = parseInt(req.query.limit || '10', 10);
+  const offset = (page - 1) * limit;
+
+  try {
+    const totalResult = await db.query('SELECT COUNT(*) FROM activity_logs');
+    const totalLogs = parseInt(totalResult.rows[0].count, 10);
+    const totalPages = Math.ceil(totalLogs / limit);
+
+    const logsResult = await db.query(
+      'SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [limit, offset]
+    );
+
+    res.json({
+      logs: logsResult.rows,
+      totalPages,
+      currentPage: page,
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+};

@@ -1,5 +1,6 @@
 // backend/controllers/productController.js
 const db = require('../config/database');
+const { logActivity } = require('../utils/logger');
 
 // Helper pour gérer les erreurs
 const handleError = (res, error) => {
@@ -89,7 +90,12 @@ exports.createProduct = async (req, res) => {
   
   try {
     const { rows } = await db.query(query, [name, description, price, quantity, category, image_url, file_url, product_links]);
-    res.status(201).json({ id: rows[0].id, ...req.body, image_url, file_url, product_links });
+    const newProductId = rows[0].id;
+    
+    // Log activity
+    logActivity('CREATE', 'product', newProductId, `Le produit "${name}" a été créé.`);
+
+    res.status(201).json({ id: newProductId, ...req.body, image_url, file_url, product_links });
   } catch (error) {
     handleError(res, error);
   }
@@ -133,6 +139,10 @@ exports.updateProduct = async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
+    
+    // Log activity
+    logActivity('UPDATE', 'product', id, `Le produit "${name}" a été mis à jour.`);
+
     res.json({ id, ...req.body });
   } catch (error) {
     handleError(res, error);
@@ -143,10 +153,18 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   const { id } = req.params;
   try {
+    // First, get the product name for logging before deleting it
+    const productResult = await db.query('SELECT name FROM products WHERE id = $1', [id]);
+    const productName = productResult.rowCount > 0 ? productResult.rows[0].name : 'Inconnu';
+
     const result = await db.query('UPDATE products SET active = false WHERE id = $1', [id]);
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
+
+    // Log activity
+    logActivity('DELETE', 'product', id, `Le produit "${productName}" a été marqué comme inactif (supprimé).`);
+
     res.status(204).send(); // No content
   } catch (error) {
     handleError(res, error);

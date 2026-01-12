@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
+import ActivityLogList from '../../components/admin/ActivityLogList';
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -131,6 +132,8 @@ const ManageProducts = () => {
           </button>
         </div>
       )}
+
+      <ActivityLogList />
     </div>
   );
 };
