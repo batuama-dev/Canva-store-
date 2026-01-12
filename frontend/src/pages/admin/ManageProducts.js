@@ -9,6 +9,7 @@ const ManageProducts = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [activityLogKey, setActivityLogKey] = useState(0); // Key to force re-render
 
   const fetchProducts = (page = 1) => {
     setLoading(true);
@@ -25,6 +26,22 @@ const ManageProducts = () => {
       });
   };
 
+  // When a user creates/edits a product and comes back, we want to be on page 1
+  // and see the latest activity. A simple way is to listen for focus changes.
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchProducts(1); // Refetch products on page 1
+      setActivityLogKey(prevKey => prevKey + 1); // Refresh activity log
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
@@ -33,8 +50,10 @@ const ManageProducts = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       try {
         await axios.delete(`/api/products/${productId}`);
-        // Refetch products for the current page to ensure consistency after deletion
+        // Refetch products for the current page
         fetchProducts(currentPage);
+        // Force re-render of ActivityLogList
+        setActivityLogKey(prevKey => prevKey + 1);
       } catch (err) {
         setError('Erreur lors de la suppression du produit.');
       }
@@ -133,7 +152,7 @@ const ManageProducts = () => {
         </div>
       )}
 
-      <ActivityLogList />
+      <ActivityLogList key={activityLogKey} />
     </div>
   );
 };
