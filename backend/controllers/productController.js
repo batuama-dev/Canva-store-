@@ -20,11 +20,26 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// For admin view
+// For admin view with pagination
 exports.getAllProductsAdmin = async (req, res) => {
+  const page = parseInt(req.query.page || '1', 10);
+  const limit = parseInt(req.query.limit || '10', 10);
+  const offset = (page - 1) * limit;
+
   try {
-    const { rows } = await db.query('SELECT * FROM products');
-    res.json(rows);
+    // Query to get total count of products
+    const totalResult = await db.query('SELECT COUNT(*) FROM products');
+    const totalProducts = parseInt(totalResult.rows[0].count, 10);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Query to get paginated products, order by id descending to get newest first
+    const productsResult = await db.query('SELECT * FROM products ORDER BY id DESC LIMIT $1 OFFSET $2', [limit, offset]);
+    
+    res.json({
+      products: productsResult.rows,
+      totalPages,
+      currentPage: page
+    });
   } catch (error) {
     handleError(res, error);
   }

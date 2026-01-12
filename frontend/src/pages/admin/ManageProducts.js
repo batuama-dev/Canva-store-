@@ -6,14 +6,16 @@ const ManageProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchProducts = () => {
+  const fetchProducts = (page = 1) => {
     setLoading(true);
-    // Using the new admin endpoint
-    axios.get('/api/products/admin/all')
+    axios.get(`/api/products/admin/all?page=${page}&limit=10`)
       .then(res => {
-        const activeProducts = res.data.filter(p => p.active);
-        setProducts(activeProducts);
+        setProducts(res.data.products);
+        setCurrentPage(res.data.currentPage);
+        setTotalPages(res.data.totalPages);
         setLoading(false);
       })
       .catch(err => {
@@ -23,18 +25,30 @@ const ManageProducts = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(currentPage);
+  }, [currentPage]);
 
   const handleDelete = async (productId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       try {
         await axios.delete(`/api/products/${productId}`);
-        // Mettre à jour l'état local pour enlever le produit supprimé
-        setProducts(products.filter(p => p.id !== productId));
+        // Refetch products for the current page to ensure consistency after deletion
+        fetchProducts(currentPage);
       } catch (err) {
         setError('Erreur lors de la suppression du produit.');
       }
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -50,7 +64,7 @@ const ManageProducts = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-extrabold text-gray-800">Gérer les produits</h1>
-        <Link 
+        <Link
           to="/admin/products/new"
           className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
         >
@@ -95,6 +109,28 @@ const ManageProducts = () => {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-8">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-l-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Précédent
+          </button>
+          <span className="bg-gray-200 text-gray-700 font-bold py-2 px-4">
+            Page {currentPage} sur {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-r-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Suivant
+          </button>
+        </div>
+      )}
     </div>
   );
 };
