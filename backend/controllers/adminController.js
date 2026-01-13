@@ -8,6 +8,15 @@ const handleError = (res, error) => {
 };
 
 exports.getSalesStats = async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  const params = [];
+  let dateFilterOnJoin = '';
+  if (startDate && endDate) {
+      params.push(startDate, endDate);
+      dateFilterOnJoin = `AND s.sale_date BETWEEN $1 AND $2`;
+  }
+  
   const query = `
     SELECT 
       p.name as product_name,
@@ -15,13 +24,13 @@ exports.getSalesStats = async (req, res) => {
       SUM(s.amount) as total_revenue,
       p.price
     FROM products p
-    LEFT JOIN sales s ON p.id = s.product_id
+    LEFT JOIN sales s ON p.id = s.product_id ${dateFilterOnJoin}
     WHERE p.active = true
     GROUP BY p.id, p.name, p.price
   `;
   
   try {
-    const { rows } = await db.query(query);
+    const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (error) {
     handleError(res, error);
@@ -29,25 +38,37 @@ exports.getSalesStats = async (req, res) => {
 };
 
 exports.getRecentSales = async (req, res) => {
+  const { startDate, endDate } = req.query;
   const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 5; // Let's do 5 per page for the dashboard
+  const limit = parseInt(req.query.limit, 10) || 5;
   const offset = (page - 1) * limit;
 
+  let params = [];
+  let whereClause = '';
+
+  if (startDate && endDate) {
+    whereClause = 'WHERE sale_date BETWEEN $1 AND $2';
+    params.push(startDate, endDate);
+  }
+
   try {
-    // Get total number of sales
-    const totalResult = await db.query('SELECT COUNT(*) FROM sales');
+    const totalResult = await db.query(`SELECT COUNT(*) FROM sales ${whereClause}`, params);
     const totalSales = parseInt(totalResult.rows[0].count, 10);
     const totalPages = Math.ceil(totalSales / limit);
 
-    // Get sales for the current page
+    const queryParams = [...params];
+    queryParams.push(limit, offset);
+
     const salesQuery = `
       SELECT s.*, p.name as product_name 
       FROM sales s 
       LEFT JOIN products p ON s.product_id = p.id 
+      ${whereClause}
       ORDER BY s.sale_date DESC 
-      LIMIT $1 OFFSET $2
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
-    const { rows } = await db.query(salesQuery, [limit, offset]);
+    
+    const { rows } = await db.query(salesQuery, queryParams);
 
     res.json({
       sales: rows,

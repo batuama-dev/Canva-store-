@@ -1,27 +1,62 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from '../../api/axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfToday, endOfToday } from 'date-fns';
 
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
   
-  // Loading and Error States
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingSales, setLoadingSales] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sales Pagination State
   const [salesCurrentPage, setSalesCurrentPage] = useState(1);
   const [salesTotalPages, setSalesTotalPages] = useState(1);
 
-  // Ref for horizontal scrolling
+  // Filter state
+  const [period, setPeriod] = useState('all');
+  const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
+
   const statsContainerRef = useRef(null);
 
-  const fetchStats = useCallback(async () => {
+  // Calculate date range based on period
+  useEffect(() => {
+    let startDate = null;
+    let endDate = null;
+    const now = new Date();
+
+    switch (period) {
+      case 'today':
+        startDate = startOfToday();
+        endDate = endOfToday();
+        break;
+      case 'this_week':
+        startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+        endDate = endOfWeek(now, { weekStartsOn: 1 });
+        break;
+      case 'this_month':
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+      case 'all':
+      default:
+        // No date range
+        break;
+    }
+    setDateRange({ startDate, endDate });
+    setSalesCurrentPage(1); // Reset to first page when period changes
+  }, [period]);
+
+  const fetchStats = useCallback(async (startDate, endDate) => {
     try {
       setLoadingStats(true);
-      const statsRes = await axios.get('/api/admin/stats');
+      const params = new URLSearchParams();
+      if (startDate && endDate) {
+        params.append('startDate', startDate.toISOString());
+        params.append('endDate', endDate.toISOString());
+      }
+      const statsRes = await axios.get(`/api/admin/stats?${params.toString()}`);
       setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
     } catch (err) {
       console.error('Error fetching stats data:', err.response || err);
@@ -31,28 +66,31 @@ const Dashboard = () => {
     }
   }, []);
 
-  const fetchSales = useCallback(async (page) => {
+  const fetchSales = useCallback(async (page, startDate, endDate) => {
     try {
       setLoadingSales(true);
-      const salesRes = await axios.get(`/api/admin/recent-sales?page=${page}&limit=5`);
+      const params = new URLSearchParams({ page, limit: 5 });
+      if (startDate && endDate) {
+        params.append('startDate', startDate.toISOString());
+        params.append('endDate', endDate.toISOString());
+      }
+      const salesRes = await axios.get(`/api/admin/recent-sales?${params.toString()}`);
       setRecentSales(Array.isArray(salesRes.data.sales) ? salesRes.data.sales : []);
       setSalesCurrentPage(salesRes.data.currentPage);
       setSalesTotalPages(salesRes.data.totalPages);
     } catch (err) {
       console.error('Error fetching recent sales:', err.response || err);
-      setError('Impossible de charger les ventes récentes.');
+      setError('Impossible de charger les ventes.');
     } finally {
       setLoadingSales(false);
     }
   }, []);
 
+  // Fetch data when date range or page changes
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
-  useEffect(() => {
-    fetchSales(salesCurrentPage);
-  }, [fetchSales, salesCurrentPage]);
+    fetchStats(dateRange.startDate, dateRange.endDate);
+    fetchSales(salesCurrentPage, dateRange.startDate, dateRange.endDate);
+  }, [dateRange, salesCurrentPage, fetchStats, fetchSales]);
 
   const handlePrevSalesPage = () => {
     if (salesCurrentPage > 1) {
@@ -69,7 +107,7 @@ const Dashboard = () => {
   const handleStatsScroll = (direction) => {
     const container = statsContainerRef.current;
     if (container) {
-        const scrollAmount = container.offsetWidth * 0.8; // Scroll by 80% of the container's visible width
+        const scrollAmount = container.offsetWidth * 0.8;
         container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
     }
   };
@@ -87,7 +125,21 @@ const Dashboard = () => {
 
   return (
     <>
-      <h1 className="text-4xl font-extrabold text-gray-800 mb-8">Tableau de bord</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-extrabold text-gray-800">Tableau de bord</h1>
+        <div className="relative">
+            <select 
+                value={period} 
+                onChange={(e) => setPeriod(e.target.value)}
+                className="appearance-none rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-base shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+            >
+                <option value="all">Tout temps</option>
+                <option value="today">Aujourd'hui</option>
+                <option value="this_week">Cette semaine</option>
+                <option value="this_month">Ce mois-ci</option>
+            </select>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -105,16 +157,16 @@ const Dashboard = () => {
       <div className="mb-8 relative">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-700">Détails par produit</h2>
-            {stats.length > 3 && ( // Only show arrows if there's something to scroll
+            {stats.filter(s => s.sales_count > 0).length > 3 && (
                 <div className="flex space-x-2">
                     <button onClick={() => handleStatsScroll(-1)} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"><ChevronLeft size={20} /></button>
                     <button onClick={() => handleStatsScroll(1)} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"><ChevronRight size={20} /></button>
                 </div>
             )}
         </div>
-        {stats.length > 0 ? (
+        {stats.filter(s => s.sales_count > 0).length > 0 ? (
           <div ref={statsContainerRef} className="flex overflow-x-auto scrollbar-hide space-x-6 pb-4">
-            {stats.map(item => (
+            {stats.filter(s => s.sales_count > 0).map(item => (
               <div key={item.product_name} className="flex-shrink-0 w-80 bg-white p-6 rounded-xl shadow-md">
                 <h3 className="font-bold text-lg text-gray-800 truncate">{item.product_name}</h3>
                 <p className="text-gray-600 mt-2">Ventes: <span className="font-semibold">{item.sales_count}</span></p>
@@ -123,13 +175,13 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">Aucune statistique de produit à afficher.</p>
+          <p className="text-gray-500">Aucune statistique de produit à afficher pour cette période.</p>
         )}
       </div>
 
       {/* Recent Sales Table */}
       <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-opacity duration-300 ${loadingSales ? 'opacity-60' : 'opacity-100'}`}>
-        <h2 className="text-2xl font-bold text-gray-700 p-6 border-b">Ventes récentes</h2>
+        <h2 className="text-2xl font-bold text-gray-700 p-6 border-b">Packs vendus</h2>
         {recentSales.length > 0 ? (
           <>
             <div className="overflow-x-auto">
@@ -140,6 +192,7 @@ const Dashboard = () => {
                     <th className="p-4 font-semibold">Produit</th>
                     <th className="p-4 font-semibold">Montant</th>
                     <th className="p-4 font-semibold">Date</th>
+                    <th className="p-4 font-semibold">Heure</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,14 +204,14 @@ const Dashboard = () => {
                       </td>
                       <td className="p-4">{sale.product_name}</td>
                       <td className="p-4 font-semibold">{sale.amount}$</td>
-                      <td className="p-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleDateString()}</td>
+                      <td className="p-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleDateString('fr-FR')}</td>
+                      <td className="p-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleTimeString('fr-FR')}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination for Recent Sales */}
             {salesTotalPages > 1 && (
               <div className="p-4 flex justify-center items-center border-t">
                 <button
@@ -186,7 +239,7 @@ const Dashboard = () => {
             )}
           </>
         ) : (
-            !loadingSales && <p className="p-6 text-gray-500">Aucune vente récente à afficher.</p>
+            !loadingSales && <p className="p-6 text-gray-500">Aucun pack vendu pour cette période.</p>
         )}
          {loadingSales && recentSales.length === 0 && <div className="p-6 text-center text-gray-500">Chargement des ventes...</div>}
       </div>

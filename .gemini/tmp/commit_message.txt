@@ -1,0 +1,7 @@
+fix(frontend): Assurer le rafraîchissement de l'historique des activités
+
+Correction du problème où la liste de l'historique des activités ne se mettait pas à jour après une action de l'utilisateur (suppression, création, modification).
+
+- Un état `activityLogKey` est maintenant utilisé comme une `key` sur le composant `ActivityLogList`.
+- Cette clé est mise à jour après la suppression d'un produit, forçant React à remonter le composant et à rafraîchir les données.
+- Un écouteur d'événements `focus` a été ajouté pour rafraîchir automatiquement les données lorsque l'utilisateur revient sur la page, garantissant que les nouvelles créations ou modifications sont également reflétées.
