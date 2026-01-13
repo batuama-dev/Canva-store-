@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, forwardRef } from 'react';
 import axios from '../../api/axios';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfToday, endOfToday } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, isFuture, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import DatePicker from 'react-datepicker';
 
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
@@ -14,48 +16,50 @@ const Dashboard = () => {
   const [salesCurrentPage, setSalesCurrentPage] = useState(1);
   const [salesTotalPages, setSalesTotalPages] = useState(1);
 
-  // Filter state
-  const [period, setPeriod] = useState('all');
+  // --- New Filter State ---
+  const [viewMode, setViewMode] = useState('month'); // 'day', 'week', 'month'
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState({ startDate: null, endDate: null });
 
   const statsContainerRef = useRef(null);
 
-  // Calculate date range based on period
+  // --- New Date Calculation Logic ---
   useEffect(() => {
-    let startDate = null;
-    let endDate = null;
-    const now = new Date();
-
-    switch (period) {
-      case 'today':
-        startDate = startOfToday();
-        endDate = endOfToday();
+    let start, end;
+    
+    switch (viewMode) {
+      case 'day':
+        start = startOfDay(selectedDate);
+        end = endOfDay(selectedDate);
         break;
-      case 'this_week':
-        startDate = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-        endDate = endOfWeek(now, { weekStartsOn: 1 });
+      case 'week':
+        start = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday
+        end = endOfWeek(selectedDate, { weekStartsOn: 1 });
         break;
-      case 'this_month':
-        startDate = startOfMonth(now);
-        endDate = endOfMonth(now);
-        break;
-      case 'all':
+      case 'month':
       default:
-        // No date range
+        start = startOfMonth(selectedDate);
+        end = endOfMonth(selectedDate);
         break;
     }
-    setDateRange({ startDate, endDate });
-    setSalesCurrentPage(1); // Reset to first page when period changes
-  }, [period]);
+
+    // If the calculated end date is in the future, cap it at the current moment
+    if (isFuture(end)) {
+      end = new Date();
+    }
+
+    setDateRange({ startDate: start, endDate: end });
+    setSalesCurrentPage(1); // Reset page on new date selection
+  }, [viewMode, selectedDate]);
 
   const fetchStats = useCallback(async (startDate, endDate) => {
+    if (!startDate || !endDate) return;
     try {
       setLoadingStats(true);
       const params = new URLSearchParams();
-      if (startDate && endDate) {
-        params.append('startDate', startDate.toISOString());
-        params.append('endDate', endDate.toISOString());
-      }
+      params.append('startDate', startDate.toISOString());
+      params.append('endDate', endDate.toISOString());
+      
       const statsRes = await axios.get(`/api/admin/stats?${params.toString()}`);
       setStats(Array.isArray(statsRes.data) ? statsRes.data : []);
     } catch (err) {
@@ -67,13 +71,13 @@ const Dashboard = () => {
   }, []);
 
   const fetchSales = useCallback(async (page, startDate, endDate) => {
+    if (!startDate || !endDate) return;
     try {
       setLoadingSales(true);
       const params = new URLSearchParams({ page, limit: 5 });
-      if (startDate && endDate) {
-        params.append('startDate', startDate.toISOString());
-        params.append('endDate', endDate.toISOString());
-      }
+      params.append('startDate', startDate.toISOString());
+      params.append('endDate', endDate.toISOString());
+      
       const salesRes = await axios.get(`/api/admin/recent-sales?${params.toString()}`);
       setRecentSales(Array.isArray(salesRes.data.sales) ? salesRes.data.sales : []);
       setSalesCurrentPage(salesRes.data.currentPage);
@@ -86,7 +90,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Fetch data when date range or page changes
   useEffect(() => {
     fetchStats(dateRange.startDate, dateRange.endDate);
     fetchSales(salesCurrentPage, dateRange.startDate, dateRange.endDate);
@@ -111,10 +114,27 @@ const Dashboard = () => {
         container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
     }
   };
+  
+  // Custom Input for DatePicker
+  const CustomDatePickerInput = forwardRef(({ value, onClick }, ref) => (
+    <button onClick={onClick} ref={ref} className="flex items-center text-indigo-600 font-semibold bg-indigo-100 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors">
+      <CalendarIcon size={20} className="mr-2" />
+      {value}
+    </button>
+  ));
+  
+  const getDatePickerFormat = () => {
+      switch(viewMode) {
+          case 'day': return 'd MMMM yyyy';
+          case 'week': return "'Semaine du' d MMMM yyyy";
+          case 'month': return 'MMMM yyyy';
+          default: return 'd MMMM yyyy';
+      }
+  }
 
   const totalRevenue = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseFloat(item.total_revenue || 0), 0) : 0;
   const totalSales = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseInt(item.sales_count || 0, 10), 0) : 0;
-
+  
   const initialLoad = loadingStats && stats.length === 0 && recentSales.length === 0;
 
   if (initialLoad) {
@@ -127,24 +147,30 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
         <h1 className="text-4xl font-extrabold text-gray-800">Tableau de bord</h1>
-        <div className="relative">
-            <select 
-                value={period} 
-                onChange={(e) => setPeriod(e.target.value)}
-                className="appearance-none rounded-md border border-gray-300 bg-white py-2 pl-3 pr-8 text-base shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-            >
-                <option value="all">Tout temps</option>
-                <option value="today">Aujourd'hui</option>
-                <option value="this_week">Cette semaine</option>
-                <option value="this_month">Ce mois-ci</option>
-            </select>
+        
+        {/* --- New Filter UI --- */}
+        <div className="flex items-center gap-4 bg-white p-2 rounded-lg shadow-sm">
+            <div className="flex items-center border border-gray-200 rounded-lg">
+                <button onClick={() => setViewMode('day')} className={`px-4 py-2 rounded-l-md text-sm font-semibold transition-colors ${viewMode === 'day' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Jour</button>
+                <button onClick={() => setViewMode('week')} className={`px-4 py-2 text-sm font-semibold border-l border-r border-gray-200 transition-colors ${viewMode === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Semaine</button>
+                <button onClick={() => setViewMode('month')} className={`px-4 py-2 rounded-r-md text-sm font-semibold transition-colors ${viewMode === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Mois</button>
+            </div>
+            <DatePicker
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                dateFormat={getDatePickerFormat()}
+                locale={fr}
+                showMonthYearPicker={viewMode === 'month'}
+                showWeekNumbers={viewMode === 'week'}
+                customInput={<CustomDatePickerInput />}
+            />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 transition-opacity duration-300 ${loadingStats ? 'opacity-60' : 'opacity-100'}`}>
         <div className="bg-white p-6 rounded-2xl shadow-lg">
           <h4 className="text-sm font-semibold text-gray-500">Chiffre d'affaires total</h4>
           <p className="text-3xl font-bold text-indigo-600">{totalRevenue > 0 ? totalRevenue.toFixed(2) : '0'}$</p>
@@ -156,7 +182,7 @@ const Dashboard = () => {
       </div>
 
       {/* Sales by Product */}
-      <div className="mb-8 relative">
+      <div className={`mb-8 relative transition-opacity duration-300 ${loadingStats ? 'opacity-60' : 'opacity-100'}`}>
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-700">Détails par produit</h2>
             {stats.filter(s => s.sales_count > 0).length > 3 && (
@@ -166,7 +192,7 @@ const Dashboard = () => {
                 </div>
             )}
         </div>
-        {stats.filter(s => s.sales_count > 0).length > 0 ? (
+        {!loadingStats && stats.filter(s => s.sales_count > 0).length > 0 ? (
           <div ref={statsContainerRef} className="flex overflow-x-auto scrollbar-hide space-x-6 pb-4">
             {stats.filter(s => s.sales_count > 0).map(item => (
               <div key={item.product_name} className="flex-shrink-0 w-80 bg-white p-6 rounded-xl shadow-md">
@@ -177,11 +203,11 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">Aucune statistique de produit à afficher pour cette période.</p>
+          !loadingStats && <p className="text-gray-500 p-6 bg-white rounded-xl shadow-md">Aucune statistique de produit à afficher pour cette période.</p>
         )}
       </div>
 
-      {/* Recent Sales Table */}
+      {/* Packs vendus Table */}
       <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-opacity duration-300 ${loadingSales ? 'opacity-60' : 'opacity-100'}`}>
         <h2 className="text-2xl font-bold text-gray-700 p-6 border-b">Packs vendus</h2>
         {recentSales.length > 0 ? (
@@ -206,8 +232,8 @@ const Dashboard = () => {
                       </td>
                       <td className="p-4">{sale.product_name}</td>
                       <td className="p-4 font-semibold">{sale.amount}$</td>
-                      <td className="p-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleDateString('fr-FR')}</td>
-                      <td className="p-4 text-sm text-gray-500">{new Date(sale.sale_date).toLocaleTimeString('fr-FR')}</td>
+                      <td className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'P', { locale: fr })}</td>
+                      <td className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'p', { locale: fr })}</td>
                     </tr>
                   ))}
                 </tbody>
