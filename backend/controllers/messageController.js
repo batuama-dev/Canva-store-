@@ -28,14 +28,29 @@ exports.submitMessage = async (req, res) => {
   }
 };
 
-// @desc    Get all messages
+// @desc    Get all messages with pagination
 // @route   GET /api/messages
 // @access  Private/Admin
 exports.getAllMessages = async (req, res) => {
-  const query = 'SELECT * FROM messages ORDER BY created_at DESC';
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const offset = (page - 1) * limit;
+
   try {
-    const { rows } = await db.query(query);
-    res.json(rows);
+    // Get total number of messages
+    const totalResult = await db.query('SELECT COUNT(*) FROM messages');
+    const totalMessages = parseInt(totalResult.rows[0].count, 10);
+    const totalPages = Math.ceil(totalMessages / limit);
+
+    // Get messages for the current page
+    const messagesQuery = 'SELECT * FROM messages ORDER BY created_at DESC LIMIT $1 OFFSET $2';
+    const { rows } = await db.query(messagesQuery, [limit, offset]);
+
+    res.json({
+      messages: rows,
+      totalPages,
+      currentPage: page,
+    });
   } catch (error) {
     handleError(res, error, 'Error fetching messages from database.');
   }

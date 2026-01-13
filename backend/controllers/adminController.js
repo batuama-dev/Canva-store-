@@ -29,36 +29,54 @@ exports.getSalesStats = async (req, res) => {
 };
 
 exports.getRecentSales = async (req, res) => {
-  const query = `
-    SELECT s.*, p.name as product_name 
-    FROM sales s 
-    LEFT JOIN products p ON s.product_id = p.id 
-    ORDER BY s.sale_date DESC 
-    LIMIT 10
-  `;
-  
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 5; // Let's do 5 per page for the dashboard
+  const offset = (page - 1) * limit;
+
   try {
-    const { rows } = await db.query(query);
-    res.json(rows);
+    // Get total number of sales
+    const totalResult = await db.query('SELECT COUNT(*) FROM sales');
+    const totalSales = parseInt(totalResult.rows[0].count, 10);
+    const totalPages = Math.ceil(totalSales / limit);
+
+    // Get sales for the current page
+    const salesQuery = `
+      SELECT s.*, p.name as product_name 
+      FROM sales s 
+      LEFT JOIN products p ON s.product_id = p.id 
+      ORDER BY s.sale_date DESC 
+      LIMIT $1 OFFSET $2
+    `;
+    const { rows } = await db.query(salesQuery, [limit, offset]);
+
+    res.json({
+      sales: rows,
+      totalPages,
+      currentPage: page,
+    });
   } catch (error) {
     handleError(res, error);
   }
 };
 
 exports.getActivityLogs = async (req, res) => {
+  console.log('[getActivityLogs] Endpoint triggered.');
   const page = parseInt(req.query.page || '1', 10);
   const limit = parseInt(req.query.limit || '10', 10);
   const offset = (page - 1) * limit;
+  console.log(`[getActivityLogs] Pagination: page=${page}, limit=${limit}, offset=${offset}`);
 
   try {
     const totalResult = await db.query('SELECT COUNT(*) FROM activity_logs');
     const totalLogs = parseInt(totalResult.rows[0].count, 10);
     const totalPages = Math.ceil(totalLogs / limit);
+    console.log(`[getActivityLogs] Found ${totalLogs} total logs.`);
 
     const logsResult = await db.query(
       'SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2',
       [limit, offset]
     );
+    console.log(`[getActivityLogs] Sending ${logsResult.rows.length} logs for current page.`);
 
     res.json({
       logs: logsResult.rows,
@@ -66,6 +84,7 @@ exports.getActivityLogs = async (req, res) => {
       currentPage: page,
     });
   } catch (error) {
+    console.error('[getActivityLogs] Error fetching activity logs:', error);
     handleError(res, error);
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../../api/axios';
-import { Send, Eye } from 'lucide-react';
+import { Send, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 
 const ManageMessages = () => {
@@ -10,12 +10,18 @@ const ManageMessages = () => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [replyStatus, setReplyStatus] = useState({ loading: false, error: null, success: null });
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    const fetchMessages = useCallback(() => {
+    const fetchMessages = useCallback((page = 1) => {
         setLoading(true);
-        axios.get('/api/messages')
+        axios.get(`/api/messages?page=${page}&limit=10`)
             .then(res => {
-                setMessages(res.data);
+                setMessages(res.data.messages);
+                setCurrentPage(res.data.currentPage);
+                setTotalPages(res.data.totalPages);
                 setLoading(false);
             })
             .catch(() => {
@@ -25,8 +31,8 @@ const ManageMessages = () => {
     }, []);
 
     useEffect(() => {
-        fetchMessages();
-    }, [fetchMessages]);
+        fetchMessages(currentPage);
+    }, [fetchMessages, currentPage]);
     
     const openModal = (message) => {
         setSelectedMessage(message);
@@ -35,7 +41,7 @@ const ManageMessages = () => {
         if (message.status === 'new') {
             // Mark as read
             axios.put(`/api/messages/${message.id}/status`, { status: 'read' })
-                .then(() => fetchMessages()); // Refresh list to show status change
+                .then(() => fetchMessages(currentPage)); // Refresh list to show status change
         }
     };
 
@@ -49,13 +55,25 @@ const ManageMessages = () => {
                 setReplyText('');
                 setTimeout(() => {
                     setSelectedMessage(null); // Close modal on success
-                    fetchMessages(); // Refresh list
+                    fetchMessages(currentPage); // Refresh list
                 }, 1500);
             })
             .catch(err => {
                 const errorMsg = err.response?.data?.message || 'Failed to send reply.';
                 setReplyStatus({ loading: false, success: null, error: errorMsg });
             });
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
     };
 
     const getStatusBadge = (status) => {
@@ -67,14 +85,14 @@ const ManageMessages = () => {
         }
     };
 
-    if (loading) return <div className="text-center p-8">Loading messages...</div>;
+    if (loading && messages.length === 0) return <div className="text-center p-8">Loading messages...</div>;
     if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
 
     return (
         <div className="p-8 bg-gray-100 min-h-screen">
             <h1 className="text-3xl font-bold text-gray-800 mb-8">Manage Messages</h1>
 
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className={`bg-white rounded-lg shadow-md overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                 <ul className="divide-y divide-gray-200">
                     {messages.map(msg => (
                         <li key={msg.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
@@ -88,13 +106,41 @@ const ManageMessages = () => {
                             <div className="flex items-center">
                                 <span className="text-sm text-gray-500 mr-6">{format(new Date(msg.created_at), 'MMM d, yyyy')}</span>
                                 <button onClick={() => openModal(msg)} className="text-indigo-600 hover:text-indigo-800 p-2"><Eye size={20} /></button>
-                                {/* <button className="text-red-500 hover:text-red-700 p-2"><Trash2 size={20} /></button> */}
                             </div>
                         </li>
                     ))}
                 </ul>
-                {messages.length === 0 && <p className="p-8 text-center text-gray-500">No messages found.</p>}
+                
+                {messages.length === 0 && !loading && <p className="p-8 text-center text-gray-500">No messages found.</p>}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-8">
+                    <button 
+                        onClick={handlePrevPage} 
+                        disabled={currentPage === 1 || loading}
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                        <ChevronLeft size={16} className="mr-1" />
+                        Précédent
+                    </button>
+                    
+                    <span className="px-4 py-2 bg-white border-t border-b border-gray-300 text-sm text-gray-700">
+                        Page {currentPage} sur {totalPages}
+                    </span>
+
+                    <button 
+                        onClick={handleNextPage} 
+                        disabled={currentPage === totalPages || loading}
+                        className="px-4 py-2 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                        Suivant
+                        <ChevronRight size={16} className="ml-1" />
+                    </button>
+                </div>
+            )}
+
 
             {/* Message Modal */}
             {selectedMessage && (
