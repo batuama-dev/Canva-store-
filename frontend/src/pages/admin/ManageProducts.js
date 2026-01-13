@@ -72,10 +72,6 @@ const ManageProducts = () => {
     }
   };
 
-  if (loading) {
-    return <p>Chargement de la liste des produits...</p>;
-  }
-
   if (error) {
     return <p className="text-red-500">{error}</p>;
   }
@@ -92,7 +88,7 @@ const ManageProducts = () => {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-60' : 'opacity-100'}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50">
@@ -121,7 +117,7 @@ const ManageProducts = () => {
                   </td>
                 </tr>
               )) : (
-                <tr>
+                !loading && <tr>
                   <td colSpan="5" className="text-center text-gray-500 py-8">Aucun produit à afficher.</td>
                 </tr>
               )}
@@ -134,7 +130,7 @@ const ManageProducts = () => {
         <div className="flex justify-center items-center mt-8">
           <button
             onClick={handlePrevPage}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || loading}
             className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-l-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Précédent
@@ -144,7 +140,7 @@ const ManageProducts = () => {
           </span>
           <button
             onClick={handleNextPage}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || loading}
             className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-r-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Suivant

@@ -115,8 +115,10 @@ const Dashboard = () => {
   const totalRevenue = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseFloat(item.total_revenue || 0), 0) : 0;
   const totalSales = Array.isArray(stats) ? stats.reduce((acc, item) => acc + parseInt(item.sales_count || 0, 10), 0) : 0;
 
-  if (loadingStats) {
-    return <div>Chargement du tableau de bord...</div>;
+  const initialLoad = loadingStats && stats.length === 0 && recentSales.length === 0;
+
+  if (initialLoad) {
+    return <div className="p-8 text-center">Chargement du tableau de bord...</div>;
   }
 
   if (error) {

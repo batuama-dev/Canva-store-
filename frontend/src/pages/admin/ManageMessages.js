@@ -85,8 +85,10 @@ const ManageMessages = () => {
         }
     };
 
-    if (loading && messages.length === 0) return <div className="text-center p-8">Loading messages...</div>;
     if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
+
+    // The initial load is handled by the opacity on the container.
+    // We only need a full-page message if there's an error.
 
     return (
         <div className="p-8 bg-gray-100 min-h-screen">
