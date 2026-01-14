@@ -5,6 +5,41 @@ import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay,
 import { fr } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 
+// Custom styles for responsive table
+const responsiveTableStyles = `
+  @media (max-width: 767px) {
+    .responsive-table thead {
+      display: none;
+    }
+    .responsive-table tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .responsive-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      text-align: right;
+    }
+    .responsive-table td:last-child {
+      border-bottom: 0;
+    }
+    .responsive-table td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      text-align: left;
+      margin-right: 1rem;
+    }
+  }
+`;
+
+
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
@@ -147,15 +182,16 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
-        <h1 className="text-4xl font-extrabold text-gray-800">Tableau de bord</h1>
+      <style>{responsiveTableStyles}</style>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">Tableau de bord</h1>
         
         {/* --- New Filter UI --- */}
-        <div className="flex items-center gap-4 bg-white p-2 rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 bg-white p-2 rounded-lg shadow-sm self-start md:self-center">
             <div className="flex items-center border border-gray-200 rounded-lg">
-                <button onClick={() => setViewMode('day')} className={`px-4 py-2 rounded-l-md text-sm font-semibold transition-colors ${viewMode === 'day' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Jour</button>
-                <button onClick={() => setViewMode('week')} className={`px-4 py-2 text-sm font-semibold border-l border-r border-gray-200 transition-colors ${viewMode === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Semaine</button>
-                <button onClick={() => setViewMode('month')} className={`px-4 py-2 rounded-r-md text-sm font-semibold transition-colors ${viewMode === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Mois</button>
+                <button onClick={() => setViewMode('day')} className={`px-3 sm:px-4 py-2 rounded-l-md text-sm font-semibold transition-colors ${viewMode === 'day' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Jour</button>
+                <button onClick={() => setViewMode('week')} className={`px-3 sm:px-4 py-2 text-sm font-semibold border-l border-r border-gray-200 transition-colors ${viewMode === 'week' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Semaine</button>
+                <button onClick={() => setViewMode('month')} className={`px-3 sm:px-4 py-2 rounded-r-md text-sm font-semibold transition-colors ${viewMode === 'month' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Mois</button>
             </div>
             <DatePicker
                 selected={selectedDate}
@@ -170,7 +206,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 transition-opacity duration-300 ${loadingStats ? 'opacity-60' : 'opacity-100'}`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 transition-opacity duration-300 ${loadingStats ? 'opacity-60' : 'opacity-100'}`}>
         <div className="bg-white p-6 rounded-2xl shadow-lg">
           <h4 className="text-sm font-semibold text-gray-500">Chiffre d'affaires total</h4>
           <p className="text-3xl font-bold text-indigo-600">{totalRevenue > 0 ? totalRevenue.toFixed(2) : '0'}$</p>
@@ -186,7 +222,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-700">Détails par produit</h2>
             {stats.filter(s => s.sales_count > 0).length > 3 && (
-                <div className="flex space-x-2">
+                <div className="hidden md:flex space-x-2">
                     <button onClick={() => handleStatsScroll(-1)} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"><ChevronLeft size={20} /></button>
                     <button onClick={() => handleStatsScroll(1)} className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"><ChevronRight size={20} /></button>
                 </div>
@@ -195,7 +231,7 @@ const Dashboard = () => {
         {!loadingStats && stats.filter(s => s.sales_count > 0).length > 0 ? (
           <div ref={statsContainerRef} className="flex overflow-x-auto scrollbar-hide space-x-6 pb-4">
             {stats.filter(s => s.sales_count > 0).map(item => (
-              <div key={item.product_name} className="flex-shrink-0 w-80 bg-white p-6 rounded-xl shadow-md">
+              <div key={item.product_name} className="flex-shrink-0 w-full sm:w-80 bg-white p-6 rounded-xl shadow-md">
                 <h3 className="font-bold text-lg text-gray-800 truncate">{item.product_name}</h3>
                 <p className="text-gray-600 mt-2">Ventes: <span className="font-semibold">{item.sales_count}</span></p>
                 <p className="text-green-600 font-bold mt-1">Revenu: {item.total_revenue > 0 ? parseFloat(item.total_revenue).toFixed(2) : '0'}$</p>
@@ -213,7 +249,7 @@ const Dashboard = () => {
         {recentSales.length > 0 ? (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full text-left responsive-table">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="p-4 font-semibold">Client</th>
@@ -226,14 +262,14 @@ const Dashboard = () => {
                 <tbody>
                   {recentSales.map(sale => (
                     <tr key={sale.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                      <td className="p-4">
+                      <td data-label="Client" className="p-4">
                         <div className="font-medium">{sale.customer_name}</div>
                         <div className="text-sm text-gray-500">{sale.customer_email}</div>
                       </td>
-                      <td className="p-4">{sale.product_name}</td>
-                      <td className="p-4 font-semibold">{sale.amount}$</td>
-                      <td className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'P', { locale: fr })}</td>
-                      <td className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'p', { locale: fr })}</td>
+                      <td data-label="Produit" className="p-4">{sale.product_name}</td>
+                      <td data-label="Montant" className="p-4 font-semibold">{sale.amount}$</td>
+                      <td data-label="Date" className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'P', { locale: fr })}</td>
+                      <td data-label="Heure" className="p-4 text-sm text-gray-500">{format(new Date(sale.sale_date), 'p', { locale: fr })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -241,28 +277,33 @@ const Dashboard = () => {
             </div>
 
             {salesTotalPages > 1 && (
-              <div className="p-4 flex justify-center items-center border-t">
-                <button
-                  onClick={handlePrevSalesPage}
-                  disabled={salesCurrentPage === 1 || loadingSales}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  <ChevronLeft size={16} className="mr-1" />
-                  Précédent
-                </button>
+              <div className="p-4 flex flex-col sm:flex-row justify-center items-center border-t gap-2">
+                  <div className="flex">
+                    <button
+                      onClick={handlePrevSalesPage}
+                      disabled={salesCurrentPage === 1 || loadingSales}
+                      className="px-3 py-1 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      <ChevronLeft size={16} className="mr-1" />
+                      Précédent
+                    </button>
 
-                <span className="px-4 py-1 bg-white border-t border-b border-gray-300 text-sm text-gray-700">
-                  Page {salesCurrentPage} sur {salesTotalPages}
-                </span>
+                    <span className="px-4 py-1 bg-white border-t border-b border-gray-300 text-sm text-gray-700 hidden sm:block">
+                      Page {salesCurrentPage} sur {salesTotalPages}
+                    </span>
 
-                <button
-                  onClick={handleNextSalesPage}
-                  disabled={salesCurrentPage === salesTotalPages || loadingSales}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  Suivant
-                  <ChevronRight size={16} className="ml-1" />
-                </button>
+                    <button
+                      onClick={handleNextSalesPage}
+                      disabled={salesCurrentPage === salesTotalPages || loadingSales}
+                      className="px-3 py-1 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      Suivant
+                      <ChevronRight size={16} className="ml-1" />
+                    </button>
+                  </div>
+                   <span className="text-sm text-gray-700 sm:hidden">
+                      Page {salesCurrentPage} sur {salesTotalPages}
+                    </span>
               </div>
             )}
           </>

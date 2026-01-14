@@ -279,7 +279,7 @@ const ProductForm = () => {
             {isEditing ? 'Modifier le Pack' : 'Ajouter un nouveau Pack'}
         </h1>
 
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg space-y-8">
+        <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg space-y-8">
             {/* General Info Section */}
             <FormSection title="Informations Générales">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -355,9 +355,9 @@ const ProductForm = () => {
             {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm"><p className="font-bold">Erreur</p><p>{error}</p></div>}
             {successMessage && <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-sm"><p className="font-bold">Succès</p><p>{successMessage}</p></div>}
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-                <button type="button" onClick={() => navigate('/admin/products')} className="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300 shadow-sm transition-transform transform hover:scale-105">Annuler</button>
-                <button type="submit" disabled={loading} className="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg disabled:bg-indigo-400 disabled:cursor-not-allowed transition-transform transform hover:scale-105 flex items-center justify-center min-w-[150px]">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-4 border-t border-gray-200">
+                <button type="button" onClick={() => navigate('/admin/products')} className="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300 shadow-sm transition-transform transform hover:scale-105 w-full sm:w-auto">Annuler</button>
+                <button type="submit" disabled={loading} className="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg disabled:bg-indigo-400 disabled:cursor-not-allowed transition-transform transform hover:scale-105 flex items-center justify-center min-w-[150px] w-full sm:w-auto">
                     {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (isEditing ? 'Sauvegarder' : 'Créer le Pack')}
                 </button>
             </div>
@@ -369,7 +369,7 @@ const ProductForm = () => {
 // --- Sub-components for cleaner structure ---
 
 const FormSection = ({ title, children }) => (
-    <div className="p-6 border border-gray-200 rounded-xl">
+    <div className="p-4 sm:p-6 border border-gray-200 rounded-xl">
         <h2 className="text-xl font-semibold mb-4 text-gray-700">{title}</h2>
         <div className="space-y-4">{children}</div>
     </div>
@@ -383,27 +383,26 @@ const InputField = ({ label, name, value, onChange, type = 'text', placeholder =
 );
 
 const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
         {previewUrl ? (
             <img src={previewUrl} alt="Aperçu" className="w-32 h-32 rounded-lg object-cover shadow-md"/>
         ) : (
-            <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">Pas d'image</div>
+            <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-center text-sm p-2">Pas d'image</div>
         )}
-        <div>
-            <label htmlFor="main_preview_file" className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <span>{previewUrl ? 'Changer l\'image' : 'Sélectionner une image'}</span>
+        <div className="flex flex-col gap-2">
+            <label htmlFor="main_preview_file" className="relative cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center">
+                <span>{previewUrl ? 'Changer' : 'Sélectionner'}</span>
                 <input 
                   id="main_preview_file" 
                   name="main_preview_file" 
                   type="file" 
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                   onChange={onFileChange} 
-                  onClick={(e) => console.log('Input IMG Principal: defaultPrevented?', e.defaultPrevented)}
                   accept="image/png, image/jpeg, image/webp" 
                 />
             </label>
              {previewUrl && (
-                <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="ml-2 text-sm text-red-600 hover:text-red-800">Supprimer</button>
+                <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="text-sm text-red-600 hover:text-red-800">Supprimer</button>
             )}
         </div>
     </div>
@@ -411,7 +410,7 @@ const ImageUploadPreview = ({ previewUrl, onFileChange }) => (
 
 const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
     <div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {previews.map((url, index) => (
                 <div key={index} className="relative group">
                     <img src={url} alt={`Aperçu galerie ${index + 1}`} className="w-full h-32 rounded-lg object-cover shadow-md" />
@@ -429,7 +428,6 @@ const GalleryUploadGrid = ({ previews, onFilesChange, onRemoveImage }) => (
                   type="file" 
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                   onChange={onFilesChange} 
-                  onClick={(e) => console.log('Input Galerie: defaultPrevented?', e.defaultPrevented)}
                   accept="image/png, image/jpeg, image/webp" 
                   multiple 
                 />
@@ -451,8 +449,8 @@ const DynamicInput = ({ index, value, onChange, onRemove, placeholder, showRemov
 );
 
 const DownloadFileUploadField = ({ fileName, onFileChange }) => (
-    <div className="flex items-center gap-4">
-        <div className="flex-1">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-1 w-full">
             <label htmlFor="download_file" className="sr-only">Fichier PDF</label>
             <input 
               id="download_file" 
@@ -460,14 +458,13 @@ const DownloadFileUploadField = ({ fileName, onFileChange }) => (
               type="file" 
               className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" 
               onChange={onFileChange} 
-              onClick={(e) => console.log('Input PDF: defaultPrevented?', e.defaultPrevented)}
               accept=".pdf" 
             />
         </div>
         {fileName && (
             <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">{fileName}</span>
-                <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="text-sm text-red-600 hover:text-red-800">Supprimer</button>
+                <span className="text-sm text-gray-600 truncate max-w-[200px]">{fileName}</span>
+                <button type="button" onClick={() => onFileChange({ target: { files: [] } })} className="text-sm text-red-600 hover:text-red-800 flex-shrink-0">Supprimer</button>
             </div>
         )}
     </div>

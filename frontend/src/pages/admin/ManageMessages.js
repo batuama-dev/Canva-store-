@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from '../../api/axios';
 import { Send, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const ManageMessages = () => {
     const [messages, setMessages] = useState([]);
@@ -91,55 +92,59 @@ const ManageMessages = () => {
     // We only need a full-page message if there's an error.
 
     return (
-        <div className="p-8 bg-gray-100 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Manage Messages</h1>
+        <>
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Gérer les messages</h1>
 
             <div className={`bg-white rounded-lg shadow-md overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
                 <ul className="divide-y divide-gray-200">
                     {messages.map(msg => (
-                        <li key={msg.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center">
-                                <span className={`mr-4 p-1.5 text-xs font-bold text-white ${getStatusBadge(msg.status)} rounded-full`}>{msg.status.toUpperCase()}</span>
-                                <div>
-                                    <p className="font-semibold text-gray-800">{msg.sender_name} <span className="text-sm text-gray-500 font-normal">&lt;{msg.sender_email}&gt;</span></p>
-                                    <p className="text-sm text-gray-600 truncate max-w-md">{msg.message}</p>
+                        <li key={msg.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between hover:bg-gray-50 transition-colors gap-4">
+                            <div className="flex-grow">
+                                <div className="flex items-center mb-2 sm:mb-0">
+                                    <span className={`mr-3 p-1.5 text-xs font-bold text-white ${getStatusBadge(msg.status)} rounded-full`}>{msg.status.toUpperCase()}</span>
+                                    <p className="font-semibold text-gray-800">{msg.sender_name} <span className="text-sm text-gray-500 font-normal hidden sm:inline">&lt;{msg.sender_email}&gt;</span></p>
                                 </div>
+                                <p className="text-sm text-gray-500 font-normal sm:hidden mb-2">{msg.sender_email}</p>
+                                <p className="text-sm text-gray-600 truncate max-w-xs sm:max-w-md md:max-w-lg">{msg.message}</p>
                             </div>
-                            <div className="flex items-center">
-                                <span className="text-sm text-gray-500 mr-6">{format(new Date(msg.created_at), 'MMM d, yyyy')}</span>
-                                <button onClick={() => openModal(msg)} className="text-indigo-600 hover:text-indigo-800 p-2"><Eye size={20} /></button>
+                            <div className="flex items-center self-end sm:self-center">
+                                <span className="text-sm text-gray-500 mr-4">{format(new Date(msg.created_at), 'd MMM yyyy', { locale: fr })}</span>
+                                <button onClick={() => openModal(msg)} className="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-100"><Eye size={20} /></button>
                             </div>
                         </li>
                     ))}
                 </ul>
                 
-                {messages.length === 0 && !loading && <p className="p-8 text-center text-gray-500">No messages found.</p>}
+                {messages.length === 0 && !loading && <p className="p-8 text-center text-gray-500">Aucun message pour le moment.</p>}
             </div>
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center mt-8">
-                    <button 
-                        onClick={handlePrevPage} 
-                        disabled={currentPage === 1 || loading}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                    >
-                        <ChevronLeft size={16} className="mr-1" />
-                        Précédent
-                    </button>
-                    
-                    <span className="px-4 py-2 bg-white border-t border-b border-gray-300 text-sm text-gray-700">
+                <div className="p-4 flex flex-col sm:flex-row justify-center items-center mt-8 gap-2">
+                    <div className="flex">
+                        <button
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1 || loading}
+                            className="px-3 py-1 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                            <ChevronLeft size={16} className="mr-1" />
+                            Précédent
+                        </button>
+                        <span className="px-4 py-1 bg-white border-t border-b border-gray-300 text-sm text-gray-700 hidden sm:block">
+                            Page {currentPage} sur {totalPages}
+                        </span>
+                        <button
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages || loading}
+                            className="px-3 py-1 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                            Suivant
+                            <ChevronRight size={16} className="ml-1" />
+                        </button>
+                    </div>
+                     <span className="text-sm text-gray-700 sm:hidden">
                         Page {currentPage} sur {totalPages}
                     </span>
-
-                    <button 
-                        onClick={handleNextPage} 
-                        disabled={currentPage === totalPages || loading}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                    >
-                        Suivant
-                        <ChevronRight size={16} className="ml-1" />
-                    </button>
                 </div>
             )}
 
@@ -147,11 +152,11 @@ const ManageMessages = () => {
             {/* Message Modal */}
             {selectedMessage && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg">
                         <div className="p-6 border-b">
-                            <h2 className="text-2xl font-bold text-gray-800">Message from {selectedMessage.sender_name}</h2>
+                            <h2 className="text-2xl font-bold text-gray-800">Message de {selectedMessage.sender_name}</h2>
                             <p className="text-sm text-gray-500">{selectedMessage.sender_email}</p>
-                            <p className="text-sm text-gray-500 mt-1">{format(new Date(selectedMessage.created_at), 'PPP p')}</p>
+                            <p className="text-sm text-gray-500 mt-1">{format(new Date(selectedMessage.created_at), 'PPP p', { locale: fr })}</p>
                         </div>
                         
                         <div className="p-6 max-h-60 overflow-y-auto bg-gray-50">
@@ -159,27 +164,27 @@ const ManageMessages = () => {
                         </div>
 
                         <div className="p-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">Reply</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-4">Répondre</h3>
                             <form onSubmit={handleReplySubmit}>
                                 <textarea 
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
                                     className="w-full p-3 border rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                                     rows="5"
-                                    placeholder={`Type your reply to ${selectedMessage.sender_name}...`}
+                                    placeholder={`Écrire une réponse à ${selectedMessage.sender_name}...`}
                                     required
                                 />
-                                <div className="mt-4 flex justify-between items-center">
-                                    <div>
+                                <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4">
+                                    <div className="self-center sm:self-auto">
                                         {replyStatus.success && <p className="text-green-600">{replyStatus.success}</p>}
                                         {replyStatus.error && <p className="text-red-600">{replyStatus.error}</p>}
                                     </div>
-                                    <div className="flex gap-4">
-                                        <button type="button" onClick={() => setSelectedMessage(null)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                                            Cancel
+                                    <div className="flex flex-col-reverse sm:flex-row gap-4 w-full sm:w-auto">
+                                        <button type="button" onClick={() => setSelectedMessage(null)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 w-full sm:w-auto">
+                                            Annuler
                                         </button>
-                                        <button type="submit" disabled={replyStatus.loading} className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 flex items-center">
-                                            {replyStatus.loading ? 'Sending...' : 'Send Reply'}
+                                        <button type="submit" disabled={replyStatus.loading} className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 flex items-center justify-center w-full sm:w-auto">
+                                            {replyStatus.loading ? 'Envoi...' : 'Envoyer'}
                                             {!replyStatus.loading && <Send size={16} className="ml-2" />}
                                         </button>
                                     </div>
@@ -189,7 +194,7 @@ const ManageMessages = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

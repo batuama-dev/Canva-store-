@@ -2,6 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
 import ActivityLogList from '../../components/admin/ActivityLogList';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+// Custom styles for responsive table
+const responsiveTableStyles = `
+  @media (max-width: 767px) {
+    .responsive-table thead {
+      display: none;
+    }
+    .responsive-table tr {
+      display: block;
+      margin-bottom: 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .responsive-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      text-align: right;
+    }
+    .responsive-table td:last-child {
+      border-bottom: 0;
+    }
+    .responsive-table td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      text-align: left;
+      margin-right: 1rem;
+    }
+  }
+`;
 
 const ManageProducts = () => {
   const [products, setProducts] = useState([]);
@@ -54,7 +89,7 @@ const ManageProducts = () => {
         fetchProducts(currentPage);
         // Force re-render of ActivityLogList
         setActivityLogKey(prevKey => prevKey + 1);
-      } catch (err) {
+      } catch (err) => {
         setError('Erreur lors de la suppression du produit.');
       }
     }
@@ -78,11 +113,12 @@ const ManageProducts = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-800">Gérer les produits</h1>
+      <style>{responsiveTableStyles}</style>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">Gérer les produits</h1>
         <Link
           to="/admin/products/new"
-          className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+          className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors self-start md:self-auto"
         >
           + Ajouter un produit
         </Link>
@@ -90,7 +126,7 @@ const ManageProducts = () => {
 
       <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-60' : 'opacity-100'}`}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left responsive-table">
             <thead className="bg-gray-50">
               <tr>
                 <th className="p-4 font-semibold">Produit</th>
@@ -103,17 +139,19 @@ const ManageProducts = () => {
             <tbody>
               {products.length > 0 ? products.map(product => (
                 <tr key={product.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="p-4 font-medium">{product.name}</td>
-                  <td className="p-4">${product.price}</td>
-                  <td className="p-4">{product.quantity}</td>
-                  <td className="p-4">
+                  <td data-label="Produit" className="p-4 font-medium">{product.name}</td>
+                  <td data-label="Prix" className="p-4">${product.price}</td>
+                  <td data-label="Quantité" className="p-4">{product.quantity}</td>
+                  <td data-label="Actif" className="p-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${product.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {product.active ? 'Oui' : 'Non'}
                     </span>
                   </td>
-                  <td className="p-4 flex gap-2">
-                    <Link to={`/admin/products/edit/${product.id}`} className="text-indigo-600 hover:underline">Modifier</Link>
-                    <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:underline">Supprimer</button>
+                  <td data-label="Actions" className="p-4">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                        <Link to={`/admin/products/edit/${product.id}`} className="text-indigo-600 hover:underline">Modifier</Link>
+                        <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:underline">Supprimer</button>
+                    </div>
                   </td>
                 </tr>
               )) : (
@@ -127,24 +165,31 @@ const ManageProducts = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-8">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1 || loading}
-            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-l-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Précédent
-          </button>
-          <span className="bg-gray-200 text-gray-700 font-bold py-2 px-4">
-            Page {currentPage} sur {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages || loading}
-            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-r-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Suivant
-          </button>
+        <div className="p-4 flex flex-col sm:flex-row justify-center items-center mt-8 gap-2">
+            <div className="flex">
+                <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                <ChevronLeft size={16} className="mr-1" />
+                Précédent
+                </button>
+                <span className="px-4 py-1 bg-white border-t border-b border-gray-300 text-sm text-gray-700 hidden sm:block">
+                    Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || loading}
+                className="px-3 py-1 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                Suivant
+                <ChevronRight size={16} className="ml-1" />
+                </button>
+            </div>
+            <span className="text-sm text-gray-700 sm:hidden">
+                Page {currentPage} sur {totalPages}
+            </span>
         </div>
       )}
 
