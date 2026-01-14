@@ -70,6 +70,18 @@ CREATE TABLE messages (
 );
 
 --
+-- Structure de la table `activity_logs`
+--
+CREATE TABLE activity_logs (
+    id SERIAL PRIMARY KEY,
+    action_type VARCHAR(50) NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id INT, -- Peut être NULL si l'action ne concerne pas une entité spécifique
+    details TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
+
+--
 -- Déchargement des données de la table `products`
 --
 INSERT INTO products (id, name, description, price, image_url, category, active, created_at, quantity) VALUES
@@ -93,6 +105,7 @@ SELECT setval('products_id_seq', (SELECT MAX(id) FROM products));
 SELECT setval('product_images_id_seq', (SELECT MAX(id) FROM product_images));
 SELECT setval('sales_id_seq', (SELECT MAX(id) FROM sales)); -- Ajouté pour sales
 SELECT setval('messages_id_seq', (SELECT MAX(id) FROM messages)); -- Ajouté pour messages
+SELECT setval('activity_logs_id_seq', (SELECT MAX(id) FROM activity_logs)); -- Ajouté pour activity_logs
 
 -- N'oubliez pas le COMMIT; en fin de script si vous êtes en mode transactionnel
 COMMIT;
