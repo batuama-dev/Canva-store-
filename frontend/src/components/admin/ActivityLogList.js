@@ -1,8 +1,8 @@
-// frontend/src/components/admin/ActivityLogList.js
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ActivityLogList = () => {
   const [logs, setLogs] = useState([]);
@@ -15,21 +15,18 @@ const ActivityLogList = () => {
     setLoading(true);
     axios.get(`/api/admin/activity-logs?page=${page}&limit=5`)
       .then(res => {
-        console.log('[ActivityLogList] API Response:', res.data);
         setLogs(res.data.logs);
         setCurrentPage(res.data.currentPage);
         setTotalPages(res.data.totalPages);
         setLoading(false);
       })
       .catch(err => {
-        console.error('[ActivityLogList] API Error:', err);
         setError('Impossible de charger l\'historique des activités.');
         setLoading(false);
       });
   };
 
   useEffect(() => {
-    console.log('[ActivityLogList] Component mounted or key changed. Fetching logs.');
     fetchLogs(currentPage);
   }, [currentPage]);
 
@@ -50,10 +47,6 @@ const ActivityLogList = () => {
     return `Le ${formattedDate} - ${log.details}`;
   };
 
-  if (loading) {
-    return <p>Chargement de l\'historique...</p>;
-  }
-
   if (error) {
     return <p className="text-red-500">{error}</p>;
   }
@@ -61,37 +54,45 @@ const ActivityLogList = () => {
   return (
     <div className="mt-12">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Historique des activités</h2>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-opacity duration-300 ${loading ? 'opacity-60' : ''}`}>
         <ul className="divide-y divide-gray-200">
           {logs.length > 0 ? logs.map(log => (
             <li key={log.id} className="p-4">
               <p className="text-sm text-gray-600">{renderLogDetails(log)}</p>
             </li>
           )) : (
-            <li className="p-4 text-center text-gray-500">Aucune activité enregistrée.</li>
+            !loading && <li className="p-4 text-center text-gray-500">Aucune activité enregistrée.</li>
           )}
         </ul>
+        {loading && logs.length === 0 && <p className="p-4 text-center text-gray-500">Chargement de l'historique...</p>}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center mt-4">
-          <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-l-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Précédent
-          </button>
-          <span className="bg-gray-200 text-gray-700 font-bold py-2 px-4">
-            Page {currentPage} sur {totalPages}
-          </span>
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-r-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Suivant
-          </button>
+        <div className="p-4 flex flex-col sm:flex-row justify-center items-center mt-4 gap-2">
+            <div className="flex">
+                <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1 bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                <ChevronLeft size={16} className="mr-1" />
+                Précédent
+                </button>
+                <span className="px-4 py-1 bg-white border-t border-b border-gray-300 text-sm text-gray-700 hidden sm:block">
+                    Page {currentPage} sur {totalPages}
+                </span>
+                <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || loading}
+                className="px-3 py-1 bg-white border border-gray-300 rounded-r-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                >
+                Suivant
+                <ChevronRight size={16} className="ml-1" />
+                </button>
+            </div>
+            <span className="text-sm text-gray-700 sm:hidden">
+                Page {currentPage} sur {totalPages}
+            </span>
         </div>
       )}
     </div>

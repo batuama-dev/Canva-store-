@@ -20,8 +20,8 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 w-64 h-full bg-gray-800 text-white p-4 transform transition-transform z-30 md:relative md:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 w-64 h-screen bg-gray-800 text-white p-4 transform transition-transform z-30 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div className="flex justify-between items-center mb-6">
