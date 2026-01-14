@@ -31,17 +31,18 @@ const ManageProducts = () => {
     fetchProducts(currentPage);
   }, [currentPage]);
 
-  const handleDelete = async (productId) => {
+  const handleDelete = (productId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-      try {
-        await axios.delete(`/api/products/${productId}`);
-        // Refetch products for the current page
-        fetchProducts(currentPage);
-        // Force re-render of ActivityLogList
-        setActivityLogKey(prevKey => prevKey + 1);
-      } catch (err) => {
-        setError('Erreur lors de la suppression du produit.');
-      }
+      axios.delete(`/api/products/${productId}`)
+        .then(() => {
+          // Refetch products for the current page
+          fetchProducts(currentPage);
+          // Force re-render of ActivityLogList
+          setActivityLogKey(prevKey => prevKey + 1);
+        })
+        .catch(err => {
+          setError('Erreur lors de la suppression du produit.');
+        });
     }
   };
 
