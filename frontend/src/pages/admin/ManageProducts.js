@@ -27,22 +27,6 @@ const ManageProducts = () => {
       });
   };
 
-  // When a user creates/edits a product and comes back, we want to be on page 1
-  // and see the latest activity. A simple way is to listen for focus changes.
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchProducts(1); // Refetch products on page 1
-      setActivityLogKey(prevKey => prevKey + 1); // Refresh activity log
-    };
-
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage]);
