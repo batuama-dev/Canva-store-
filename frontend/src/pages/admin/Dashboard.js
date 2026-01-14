@@ -5,41 +5,6 @@ import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay,
 import { fr } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 
-// Custom styles for responsive table
-const responsiveTableStyles = `
-  @media (max-width: 767px) {
-    .responsive-table thead {
-      display: none;
-    }
-    .responsive-table tr {
-      display: block;
-      margin-bottom: 1rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .responsive-table td {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #f3f4f6;
-      text-align: right;
-    }
-    .responsive-table td:last-child {
-      border-bottom: 0;
-    }
-    .responsive-table td::before {
-      content: attr(data-label);
-      font-weight: 600;
-      text-align: left;
-      margin-right: 1rem;
-    }
-  }
-`;
-
-
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
@@ -182,7 +147,6 @@ const Dashboard = () => {
 
   return (
     <>
-      <style>{responsiveTableStyles}</style>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">Tableau de bord</h1>
         

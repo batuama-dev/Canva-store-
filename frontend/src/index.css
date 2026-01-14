@@ -7,3 +7,34 @@
 .form-input {
   @apply block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm;
 }
+
+@media (max-width: 767px) {
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: right;
+  }
+  .responsive-table td:last-child {
+    border-bottom: 0;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    margin-right: 1rem;
+  }
+}
