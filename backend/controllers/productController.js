@@ -93,6 +93,7 @@ exports.createProduct = async (req, res) => {
     const newProductId = rows[0].id;
     
     // Log activity
+    console.log('[createProduct] Attempting to log activity...');
     logActivity('CREATE', 'product', newProductId, `Le produit "${name}" a été créé.`);
 
     res.status(201).json({ id: newProductId, ...req.body, image_url, file_url, product_links });
@@ -163,6 +164,7 @@ exports.deleteProduct = async (req, res) => {
     }
 
     // Log activity
+    console.log('[deleteProduct] Attempting to log activity...');
     logActivity('DELETE', 'product', id, `Le produit "${productName}" a été marqué comme inactif (supprimé).`);
 
     res.status(204).send(); // No content

@@ -15,18 +15,21 @@ const ActivityLogList = () => {
     setLoading(true);
     axios.get(`/api/admin/activity-logs?page=${page}&limit=5`)
       .then(res => {
+        console.log('[ActivityLogList] API Response:', res.data);
         setLogs(res.data.logs);
         setCurrentPage(res.data.currentPage);
         setTotalPages(res.data.totalPages);
         setLoading(false);
       })
       .catch(err => {
+        console.error('[ActivityLogList] API Error:', err);
         setError('Impossible de charger l\'historique des activités.');
         setLoading(false);
       });
   };
 
   useEffect(() => {
+    console.log('[ActivityLogList] Component mounted or key changed. Fetching logs.');
     fetchLogs(currentPage);
   }, [currentPage]);
 
