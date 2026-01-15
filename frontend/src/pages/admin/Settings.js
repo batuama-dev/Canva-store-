@@ -12,7 +12,7 @@ const Settings = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout');
+      await axios.post('/api/auth/logout');
       toast.success('Vous avez été déconnecté avec succès.');
       navigate('/login');
     } catch (error) {
@@ -28,7 +28,7 @@ const Settings = () => {
       return;
     }
     try {
-      const res = await axios.post('/auth/change-password', {
+      const res = await axios.post('/api/auth/change-password', {
         currentPassword,
         newPassword,
         confirmPassword,
