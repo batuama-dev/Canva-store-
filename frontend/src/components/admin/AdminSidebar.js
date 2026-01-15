@@ -79,6 +79,17 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
                 Gérer les messages
               </NavLink>
             </li>
+             <li>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  `block py-2 px-4 rounded ${isActive ? 'bg-gray-700' : ''}`
+                }
+                onClick={handleLinkClick}
+              >
+                Paramètres
+              </NavLink>
+            </li>
             {/* Add more admin links here later */}
           </ul>
         </nav>

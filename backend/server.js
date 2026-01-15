@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const setupDatabase = require('./config/setup'); // Import the setup script
 require('dotenv').config();
 
@@ -33,6 +34,7 @@ const startServer = async () => {
   app.use(cors(corsOptions));
   // Middleware
   app.use(express.json());
+  app.use(cookieParser());
   app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
   // Routes
@@ -42,7 +44,7 @@ const startServer = async () => {
   app.use('/api/auth', require('./routes/auth'));
   app.use('/api/messages', require('./routes/messages'));
   app.use('/api/checkout', require('./routes/checkout'));
-
+  
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

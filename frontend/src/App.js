@@ -21,6 +21,7 @@ import './index.css';
 import ManageProducts from './pages/admin/ManageProducts';
 import ManageMessages from './pages/admin/ManageMessages';
 import ProductForm from './pages/admin/ProductForm';
+import Settings from './pages/admin/Settings';
 
 // Load Stripe outside of a component’s render to avoid recreating the Stripe object on every render.
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
@@ -62,6 +63,7 @@ function App() {
               <Route path="products/new" element={<ProductForm />} />
               <Route path="products/edit/:id" element={<ProductForm />} />
               <Route path="messages" element={<ManageMessages />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
         </Routes>
