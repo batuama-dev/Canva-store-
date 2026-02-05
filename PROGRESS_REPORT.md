@@ -7,5 +7,10 @@
 ### Étape 1 : Localiser la dépendance critique et isoler le problème
 
 *   **Statut :** **TERMINÉ** ✅
-*   **Action :** Après une recherche approfondie des `require()` et `import()` dynamiques, seul `import('web-vitals')` dans `frontend/src/reportWebVitals.js` a été identifié. Bien que cet import soit standard, l'erreur de compilation est générique. Pour isoler le problème, le contenu de `frontend/src/reportWebVitals.js` a été temporairement commenté, ainsi que son appel dans `frontend/src/index.js`.
-*   **Progression :** La modification a été effectuée dans `frontend/src/index.js` en commentant l'import et l'appel de `reportWebVitals`.
+*   **Action :** Après avoir écarté `web-vitals` et effectué des recherches dans le code de l'application sans succès probant, l'analyse des dépendances et une recherche web ont fortement suggéré que la bibliothèque `react-icons` est une cause fréquente de l'erreur "Critical dependency" en raison de sa manière d'importer dynamiquement les icônes. Pour isoler ce problème, toutes les utilisations de `react-icons` dans le code du frontend ont été temporairement commentées ou remplacées par du texte ou des éléments simples.
+*   **Progression :** `react-icons` a été désactivé dans `frontend/src/components/common/SocialLinks.js` et `frontend/src/components/common/ContactSection.js`.
+
+### Prochaine Étape : Pousser les changements et vérifier la compilation
+
+*   **Statut :** **EN ATTENTE DE RETOUR UTILISATEUR** 🔴
+*   **Action requise :** Le `git push` a été effectué avec succès. Veuillez lancer une nouvelle compilation du frontend sur votre hébergeur et **fournissez-moi les logs complets de cette compilation.**
