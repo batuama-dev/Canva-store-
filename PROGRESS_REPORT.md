@@ -7,8 +7,8 @@
 ### Étape 1 : Localiser la dépendance critique et isoler le problème
 
 *   **Statut :** **TERMINÉ** ✅
-*   **Action :** Après avoir écarté `web-vitals` et effectué des recherches dans le code de l'application sans succès probant, l'analyse des dépendances et une recherche web ont fortement suggéré que la bibliothèque `react-icons` est une cause fréquente de l'erreur "Critical dependency" en raison de sa manière d'importer dynamiquement les icônes. Pour isoler ce problème, toutes les utilisations de `react-icons` dans le code du frontend ont été temporairement commentées ou remplacées par du texte ou des éléments simples.
-*   **Progression :** `react-icons` a été désactivé dans `frontend/src/components/common/SocialLinks.js` et `frontend/src/components/common/ContactSection.js`.
+*   **Action :** Après avoir écarté `web-vitals` et `react-icons` et effectué des recherches infructueuses dans l'historique Git, l'analyse des modifications des fichiers de configuration a révélé l'ajout de `require('tailwind-scrollbar-hide')` dans `frontend/tailwind.config.js`. Pour tester si ce plugin est la source du problème, la ligne d'importation a été temporairement commentée.
+*   **Progression :** Le plugin `tailwind-scrollbar-hide` a été désactivé dans `frontend/tailwind.config.js`.
 
 ### Prochaine Étape : Pousser les changements et vérifier la compilation
 
