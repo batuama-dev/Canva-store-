@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import axios from '../api/axios';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2/dist/sweetalert2.js'; // Import SweetAlert2
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 // A helper function to parse query parameters
 function useQuery() {
