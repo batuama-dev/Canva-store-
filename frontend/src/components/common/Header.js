@@ -12,8 +12,8 @@ const Header = () => {
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-xl sm:text-2xl font-bold text-blue-600 font-['Orbitron'] whitespace-nowrap">
-          Templyfast
+        <Link to="/">
+          <img src="/logo_temply.png" alt="Templyfast" className="h-8 sm:h-10 w-auto" />
         </Link>
         <nav className="flex gap-6">
           <Link to="/" className={getNavLinkClass('/')}>Accueil</Link>
