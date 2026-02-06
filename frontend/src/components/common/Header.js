@@ -11,7 +11,7 @@ const Header = () => {
 
   return (
     <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <Link to="/">
           <img src="/logo_temply.png" alt="Templyfast" className="h-20 sm:h-24 w-auto" />
         </Link>
