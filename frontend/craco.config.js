@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   style: {
     postcss: {
@@ -9,6 +11,9 @@ module.exports = {
   },
   webpack: {
     configure: (webpackConfig) => {
+      // Set the output directory to 'output'
+      webpackConfig.output.path = path.resolve(__dirname, 'output');
+
       webpackConfig.ignoreWarnings = [
         {
           module: /^(?!.*node_modules.*)/, // Ignore warnings from modules outside node_modules
