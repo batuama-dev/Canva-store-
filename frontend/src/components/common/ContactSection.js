@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from '../../api/axios';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
-// import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 
 const packs = [
   'Pack Graphiste Pro',
@@ -75,9 +75,9 @@ const ContactSection = () => {
             <div className="mt-8">
               <strong className="text-blue-600 font-semibold mb-4 block">Suivez-nous</strong>
               <div className="flex space-x-4">
-                <a href="https://web.facebook.com/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300">FB</a>
-                <a href="https://wa.me/243972880849" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300">WA</a>
-                <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300">IG</a>
+                <a href="https://web.facebook.com/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300"><FaFacebook /></a>
+                <a href="https://wa.me/243972880849" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300"><FaWhatsapp /></a>
+                <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl hover:bg-blue-600 hover:text-white transition-all duration-300"><FaInstagram /></a>
               </div>
             </div>
           </div>
