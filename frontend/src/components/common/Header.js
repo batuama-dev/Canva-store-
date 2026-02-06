@@ -13,7 +13,7 @@ const Header = () => {
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link to="/">
-          <img src="/logo_temply.png" alt="Templyfast" className="h-24 sm:h-32 w-auto" />
+          <img src="/logo_temply.png" alt="Templyfast" className="h-20 sm:h-24 w-auto" />
         </Link>
         <nav className="flex gap-6">
           <Link to="/" className={getNavLinkClass('/')}>Accueil</Link>
