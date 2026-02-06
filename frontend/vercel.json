@@ -4,5 +4,12 @@
       "source": "/api/:path*",
       "destination": "https://canva-store.onrender.com/api/:path*"
     }
-  ]
+  ],
+  "buildCommand": "craco build",
+  "outputDirectory": "build",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--max_old_space_size=4096"
+    }
+  }
 }
