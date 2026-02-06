@@ -6,7 +6,7 @@
     }
   ],
   "buildCommand": "craco build",
-  "outputDirectory": "build",
+  "outputDirectory": "./vercel/output",
   "build": {
     "env": {
       "NODE_OPTIONS": "--max_old_space_size=4096"
