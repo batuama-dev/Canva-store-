@@ -42,7 +42,7 @@ const AboutSection = () => {
               <ul className="list-disc list-inside text-gray-600 mb-4">
                 <li>✔️ Vous faire gagner du temps</li>
                 <li>✔️ Vous aider à augmenter votre productivité</li>
-                <li><li>✔️ Vous permettre d’accéder à du design professionnel à moindre coût</li>
+                <li>✔️ Vous permettre d’accéder à du design professionnel à moindre coût</li>
               </ul>
               <p className="text-gray-600 text-justify">
                 Nous misons sur la qualité, l’innovation et surtout la simplicité : paiement local adapté à la RDC, livraison quasi instantanée par email, et designs alignés avec les tendances actuelles.
