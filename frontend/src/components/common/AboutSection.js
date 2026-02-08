@@ -29,21 +29,6 @@ const AboutSection = () => {
               <p className="text-gray-600 mb-4 text-justify">
                 Nous sommes une plateforme congolaise dédiée à la vente de templates Canva professionnels, pensés pour les réalités, les activités et le style du marché africain. Que vous soyez graphiste, entrepreneur, community manager ou débutant motivé, Templyfast vous permet de produire plus vite, mieux et de manière rentable.
               </p>
-              <p className="text-gray-600 mb-4 text-justify">
-                Pourquoi continuer à tout concevoir manuellement, alors que des modèles professionnels peuvent déjà vous faire gagner des heures de travail ?
-                Pourquoi laisser passer des opportunités, simplement par manque d’inspiration ou de temps ?
-              </p>
-              <p className="text-gray-600 mb-4 text-justify">
-                Avec Templyfast, vous accédez à des packs de templates prêts à l’emploi, faciles à personnaliser sur Canva. En quelques minutes, vous transformez une idée en un visuel percutant, sans stress et sans blocage créatif.
-              </p>
-              <p className="text-gray-600 mb-4 text-justify">
-                Notre engagement est clair :
-              </p>
-              <ul className="list-disc list-inside text-gray-600 mb-4">
-                <li>✔️ Vous faire gagner du temps</li>
-                <li>✔️ Vous aider à augmenter votre productivité</li>
-                <li>✔️ Vous permettre d’accéder à du design professionnel à moindre coût</li>
-              </ul>
               <p className="text-gray-600 text-justify">
                 Nous misons sur la qualité, l’innovation et surtout la simplicité : paiement local adapté à la RDC, livraison quasi instantanée par email, et designs alignés avec les tendances actuelles.
               </p>
