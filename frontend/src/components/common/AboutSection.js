@@ -4,7 +4,7 @@ const AboutSection = () => {
   return (
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center -mx-4">
+        <div className="flex flex-wrap items-start -mx-4">
           {/* Image Column */}
           <div className="w-full lg:w-1/2 px-4 mb-8 lg:mb-0">
             <img 
