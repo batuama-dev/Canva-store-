@@ -16,7 +16,7 @@ const ProductDetailPage = () => {
   const [hasAcceptedCgv, setHasAcceptedCgv] = useState(false);
   const stripe = useStripe();
 
-  const CGV_CONTENT = `Conditions Générales de Vente – Templyfast
+  const CGV_CONTENT = `
 1. Objet
 
 Les présentes Conditions Générales de Vente régissent la vente de templates Canva numériques proposés sur la plateforme Templyfast.
@@ -28,11 +28,14 @@ Aucun produit physique n’est livré.
 
 3. Accès aux templates
 
-Après paiement, le client reçoit :
+Après paiement, le client :
 
-un lien de téléchargement personnel
+telecharge un PDF contenant les liens d’accès aux templates Canva achetés et
 
-un email contenant l’accès aux templates
+reçoit par email des liens d’accès aux templates Canva achetés. 
+
+En cas de non-réception, le client doit vérifier sa boîte de spam ou contacter le support pour obtenir
+
 
 4. Licence d’utilisation
 
