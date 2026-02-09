@@ -25,6 +25,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "preinstall": "npm config set legacy-peer-deps true",
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
