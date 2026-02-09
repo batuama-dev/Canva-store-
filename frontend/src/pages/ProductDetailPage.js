@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from '../api/axios';
+import { Helmet } from 'react-helmet-async'; // Import Helmet
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStripe } from '@stripe/react-stripe-js';
 
@@ -170,7 +171,12 @@ Toute commande implique l’acceptation pleine et entière des présentes Condit
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <>
+      <Helmet>
+        <title>Templyfast - {product.name} - Template Canva Professionnel</title>
+        <meta name="description" content={`${product.description} | Template Canva prêt à l'emploi. Téléchargez instantanément pour personnaliser votre design sur Templyfast.`} />
+      </Helmet>
+      <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Image Gallery */}

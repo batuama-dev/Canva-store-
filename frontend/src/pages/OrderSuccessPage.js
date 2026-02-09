@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; // Added useNavigate
 import axios from '../api/axios';
+import { Helmet } from 'react-helmet-async'; // Import Helmet
 import Swal from 'sweetalert2/dist/sweetalert2.js'; // Import SweetAlert2
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -104,7 +105,13 @@ const OrderSuccessPage = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4 text-center">
+      <>
+        <Helmet>
+          <title>Commande Réussie - Templyfast</title>
+          <meta name="description" content="Votre commande Templyfast a été traitée avec succès. Accédez à vos templates Canva numériques." />
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="container mx-auto p-4 text-center">
         <div className="bg-white p-10 rounded-lg shadow-xl max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Confirmation de votre commande...</h1>
           <p className="text-gray-600 mb-6">Veuillez patienter pendant que nous générons votre lien de téléchargement sécurisé.</p>
@@ -115,7 +122,13 @@ const OrderSuccessPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 text-center">
+    <>
+      <Helmet>
+        <title>Commande Réussie - Templyfast</title>
+        <meta name="description" content="Votre commande Templyfast a été traitée avec succès. Accédez à vos templates Canva numériques." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="container mx-auto p-4 text-center">
       <div className="bg-white p-10 rounded-lg shadow-xl max-w-2xl mx-auto">
         {error ? (
           <>

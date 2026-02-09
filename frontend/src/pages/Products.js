@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios'; // Updated import
+import { Helmet } from 'react-helmet-async'; // Import Helmet
 import ProductCard from '../components/products/ProductCard';
 
 const Products = () => {
@@ -33,7 +34,12 @@ const Products = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <Helmet>
+        <title>Templyfast - Notre Collection de Templates Canva Prêts à l'Emploi</title>
+        <meta name="description" content="Explorez la vaste collection de Templyfast : des templates Canva pour réseaux sociaux, entreprises, marketing, et événements. Des designs professionnels, personnalisables et téléchargeables instantanément pour tous vos besoins." />
+      </Helmet>
+      <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-extrabold text-center mb-10 text-gray-800">Explorez notre collection</h1>
       {products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

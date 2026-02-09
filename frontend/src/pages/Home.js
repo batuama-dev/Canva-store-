@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async'; // Import Helmet
 import AnimatedText from '../components/common/AnimatedText';
 import SocialLinks from '../components/common/SocialLinks';
 import AboutSection from '../components/common/AboutSection';
@@ -20,6 +21,10 @@ const Home = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Templyfast - Templates Canva Professionnels, Prêts à l'Emploi pour Entrepreneurs et Graphistes</title>
+        <meta name="description" content="Découvrez Templyfast : des templates Canva numériques de haute qualité pour réseaux sociaux, entrepreneurs, et événements. Créez des visuels professionnels rapidement et à moindre coût. Livraison instantanée. Parfait pour PME, freelancers et créateurs de contenu." />
+      </Helmet>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 animate-background-pan [background-size:400%_400%] min-h-screen">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-2 h-full min-h-screen">

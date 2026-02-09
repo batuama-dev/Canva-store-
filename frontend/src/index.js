@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async'; // Import HelmetProvider
 import './index.css';
 import App from './App';
 // import reportWebVitals from './reportWebVitals';
@@ -7,7 +8,9 @@ import App from './App';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <HelmetProvider> {/* Envelop the App component with HelmetProvider */}
+      <App />
+    </HelmetProvider>
   </React.StrictMode>
 );
 

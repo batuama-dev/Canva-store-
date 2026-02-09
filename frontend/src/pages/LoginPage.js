@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ThreeDots } from 'react-loader-spinner';
 import axios from '../api/axios';
+import { Helmet } from 'react-helmet-async'; // Import Helmet
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -37,7 +38,13 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <>
+      <Helmet>
+        <title>Connexion Administrateur - Templyfast</title>
+        <meta name="description" content="Page de connexion sécurisée pour les administrateurs de Templyfast." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg border border-gray-200">
         <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-800">
@@ -102,6 +109,7 @@ const LoginPage = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
 
