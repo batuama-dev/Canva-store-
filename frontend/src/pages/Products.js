@@ -54,6 +54,7 @@ const Products = () => {
         <p className="text-center text-gray-500">Aucun produit n'est disponible pour le moment.</p>
       )}
     </div>
+    </>
   );
 };
 

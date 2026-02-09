@@ -289,6 +289,7 @@ Toute commande implique l’acceptation pleine et entière des présentes Condit
         </div>
       </div>
     </div>
+    </>
   );
 };
 
