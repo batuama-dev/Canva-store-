@@ -12,7 +12,68 @@ const ProductDetailPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showCgvModal, setShowCgvModal] = useState(false);
+  const [hasAcceptedCgv, setHasAcceptedCgv] = useState(false);
   const stripe = useStripe();
+
+  const CGV_CONTENT = `Conditions Générales de Vente – Templyfast
+1. Objet
+
+Les présentes Conditions Générales de Vente régissent la vente de templates Canva numériques proposés sur la plateforme Templyfast.
+
+2. Nature des produits
+
+Les produits vendus sont des fichiers numériques (PDF contenant des liens vers des templates Canva).
+Aucun produit physique n’est livré.
+
+3. Accès aux templates
+
+Après paiement, le client reçoit :
+
+un lien de téléchargement personnel
+
+un email contenant l’accès aux templates
+
+4. Licence d’utilisation
+
+L’achat d’un template donne droit à :
+
+une utilisation personnelle ou commerciale (selon le pack)
+
+la modification libre du design
+
+Il est strictement interdit de :
+
+revendre
+
+redistribuer
+
+partager les templates ou leurs liens tels quels
+
+proposer les templates comme produit principal à la vente
+
+5. Propriété intellectuelle
+
+Les templates restent la propriété intellectuelle de Templyfast.
+L’achat ne transfère aucun droit de propriété.
+
+6. Responsabilité
+
+Templyfast ne saurait être tenu responsable :
+
+d’un mauvais usage des templates
+
+d’une incompatibilité avec des outils tiers
+
+d’une utilisation non conforme aux présentes CGV
+
+7. Remboursement
+
+Conformément à la nature numérique des produits, aucun remboursement n’est possible après accès au contenu.
+
+8. Acceptation
+
+Toute commande implique l’acceptation pleine et entière des présentes Conditions Générales de Vente.`;
 
 
   useEffect(() => {
@@ -163,13 +224,53 @@ const ProductDetailPage = () => {
             
             {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-4 shadow-sm"><p>{error}</p></div>}
 
+            <div className="mb-4">
+                <button
+                    onClick={() => setShowCgvModal(true)}
+                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium focus:outline-none"
+                >
+                    Lire les conditions générales de vente
+                </button>
+            </div>
+
+            <div className="mb-6 flex items-center">
+                <input
+                    type="checkbox"
+                    id="acceptCgv"
+                    checked={hasAcceptedCgv}
+                    onChange={(e) => setHasAcceptedCgv(e.target.checked)}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="acceptCgv" className="ml-2 block text-sm text-gray-900">
+                    J'ai lu et j'accepte les termes et conditions d'utilisation.
+                </label>
+            </div>
+
             <button 
               onClick={handlePurchase}
-              disabled={!stripe || isProcessingPayment}
+              disabled={!stripe || isProcessingPayment || !hasAcceptedCgv}
               className="w-full text-center bg-indigo-600 text-white font-bold text-lg py-4 px-8 rounded-xl hover:bg-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out block disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isProcessingPayment ? 'Traitement...' : 'Procéder à l\'achat'}
             </button>
+
+            {/* CGV Modal */}
+            {showCgvModal && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative p-6">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800">Conditions Générales de Vente – Templyfast</h2>
+                        <pre className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                            {CGV_CONTENT}
+                        </pre>
+                        <button
+                            onClick={() => setShowCgvModal(false)}
+                            className="mt-6 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="mt-8 text-sm text-gray-500">
                 <p><span className="font-semibold">Catégorie:</span> {product.category || 'Non spécifiée'}</p>
