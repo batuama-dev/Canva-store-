@@ -6,6 +6,14 @@ DROP TABLE IF EXISTS product_images CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 
+-- Structure de la table `admins`
+--
+CREATE TABLE admins (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+);
 
 --
 -- Structure de la table `products`
@@ -106,6 +114,13 @@ SELECT setval('product_images_id_seq', (SELECT MAX(id) FROM product_images));
 SELECT setval('sales_id_seq', (SELECT MAX(id) FROM sales)); -- Ajouté pour sales
 SELECT setval('messages_id_seq', (SELECT MAX(id) FROM messages)); -- Ajouté pour messages
 SELECT setval('activity_logs_id_seq', (SELECT MAX(id) FROM activity_logs)); -- Ajouté pour activity_logs
+
+-- Déchargement des données de la table `admins`
+INSERT INTO admins (username, password_hash) VALUES
+('admin', '$2b$10$ZI2YZoprEBH.URWN/6b51e2a87mQsyAMT5IQcHbwcxEue4736700i');
+
+-- Réinitialiser les séquences pour les clés primaires auto-incrémentées après l'insertion
+SELECT setval('admins_id_seq', (SELECT MAX(id) FROM admins));
 
 -- N'oubliez pas le COMMIT; en fin de script si vous êtes en mode transactionnel
 COMMIT;
