@@ -15,19 +15,8 @@ const startServer = async () => {
   // 2. Then, configure and start the Express application.
   
   // CORS configuration
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000', 'https://templyfast.vercel.app', 'https://js.stripe.com'];
-
   const corsOptions = {
-    origin: (origin, callback) => {
-      // Autoriser les requêtes sans origine (comme Postman, cURL) ou celles qui sont dans la liste blanche
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: '*',
     credentials: true,
   };
 
