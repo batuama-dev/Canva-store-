@@ -17,7 +17,7 @@ const startServer = async () => {
   // CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000'];
+    : ['http://localhost:3000', 'https://templyfast.vercel.app', 'https://js.stripe.com'];
 
   const corsOptions = {
     origin: (origin, callback) => {
