@@ -21,10 +21,14 @@ const startServer = async () => {
 
   const corsOptions = {
     origin: (origin, callback) => {
+      console.log('Requête CORS - Origine:', origin);
+      console.log('Origines autorisées:', allowedOrigins);
       // Autoriser les requêtes sans origine (comme Postman, cURL) ou celles qui sont dans la liste blanche
       if (!origin || allowedOrigins.includes(origin)) {
+        console.log('CORS: Origine autorisée.');
         callback(null, true);
       } else {
+        console.error('CORS: Origine non autorisée:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
